@@ -44,6 +44,7 @@ int main(int argc, char** argv) {
     //call_command will call the function associated with the command parsed
 
     while(fgets(buffer, BUFFER, stdin) != NULL){
+        printf("In:%s", buffer);
         if (parse_input(buffer, command, args, num_args)){
             // debug_output(buffer, command, args, num_args, next_list_idx);
 
