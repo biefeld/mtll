@@ -44,13 +44,15 @@
 
 
 //change this to be able to take the next element?
-struct node *node_create(void* value, enum TYPE type){
+struct node *node_create(void* value, enum TYPE* type){
     struct node* n = malloc(sizeof(struct node));
     if (n == NULL){
         return NULL;
     }
 
-    n->val = calloc(sizeof(void *), 1);
+    n->val = calloc(1, sizeof(void *));
+    n->type = calloc(1, sizeof(enum TYPE*));
+
     if (n->val == NULL){
         free(n->val);
         free(n);
@@ -58,13 +60,34 @@ struct node *node_create(void* value, enum TYPE type){
     }
 
     //This needs to change depending on the size/type of the value
-    if (type == FLOAT){
+    switch (*type)
+    {
+    case INT:
+        n->val = realloc(n->val, sizeof(int));
+        memcpy(n->val, value, sizeof(int));
+        break;
+
+    case FLOAT:
+        n->val = realloc(n->val, sizeof(float));
         memcpy(n->val, value, sizeof(float));
-    }
-    else{
+        break;
+
+    case CHAR:
+        n->val = realloc(n->val, sizeof(char));
         memcpy(n->val, value, sizeof(char));
+        break;
+
+    case STRING:
+        n->val = realloc(n->val, strlen(value));
+        memcpy(n->val, value, strlen(value) - 1);
+        break;
+    
+    default:
+        break;
     }
-    n->type = type; //maybe this has to be memcpy'd somehow
+
+    memcpy(n->type, type, sizeof(enum TYPE));
+    //n->type = type; //maybe this has to be memcpy'd somehow
     n->next = NULL;
 
     return n;
@@ -72,13 +95,14 @@ struct node *node_create(void* value, enum TYPE type){
 
 void node_free(struct node* n){
     free(n->val);
+    free(n->type);
     free(n);
     return;
 }
 
 
 void node_val(struct node * n, char * ret){
-    switch (n->type)
+    switch (*n->type)
     {
     case INT:
         sprintf(ret, "%d", *(int*)n->val);
@@ -100,7 +124,7 @@ void node_val(struct node * n, char * ret){
 
 //Must free the returned char after
 void node_type(struct node * n, char * ret){
-    switch (n->type)
+    switch (*n->type)
     {
     case INT:
         strcpy(ret, "int");

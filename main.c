@@ -33,7 +33,8 @@ int main(int argc, char** argv) {
     }
 
     //Allocate pointer to mtll_head, and set it pointing to NULL (no head yet)
-    struct mtll* mtll_head = NULL;
+    struct mtll* mtll_head = calloc(1, sizeof(struct mtll));
+    mtll_head->index = -1; //sentinel value
 
     //Allocate pointer to the next_list_idx, and set it pointing to the value 0
     size_t* next_list_idx = calloc(1, sizeof(size_t));
@@ -44,7 +45,6 @@ int main(int argc, char** argv) {
     //call_command will call the function associated with the command parsed
 
     while(fgets(buffer, BUFFER, stdin) != NULL){
-        printf("In:%s", buffer);
         if (parse_input(buffer, command, args, num_args)){
             // debug_output(buffer, command, args, num_args, next_list_idx);
 

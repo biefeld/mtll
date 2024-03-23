@@ -46,7 +46,7 @@
 
 // }
 
-struct mtll *mtll_create(size_t * num_nodes, size_t* next_index, void** values, enum TYPE * types){
+struct mtll *mtll_create(size_t * num_nodes, size_t* next_index, void** values, enum TYPE ** types){
     struct mtll* m = malloc(sizeof(struct mtll));
     if (m == NULL){
         return NULL;
@@ -71,22 +71,17 @@ struct mtll *mtll_create(size_t * num_nodes, size_t* next_index, void** values, 
 
 void mtll_free(struct mtll * m){
     //call mtll_remove until we head = NULL?
-    struct node* curr = m->head;
-    struct node* next = m->head->next;
-    while (next != NULL){
-        node_free(curr);
-        curr = next;
-        next = next->next;
+    struct node* cursor = m->head;
+    struct node* next;
+    while (cursor != NULL){
+        next = cursor->next;
+        node_free(cursor);
+        cursor = next;
     }
-    node_free(curr);
+    // node_free(curr);
     free(m);
 }
 
-
-void mtll_free_all(struct mtll* head){
-    //Need to free all mtll's and their nodes, and their values
-    return;
-}
 
 void mtll_remove(struct mtll * head, size_t n){
     struct mtll* curr = head;
@@ -151,3 +146,29 @@ void mtll_view_all(struct mtll * head){
 
 
 
+void mtll_append(struct mtll* head, struct mtll* new){
+    if (head->index == -1){
+        // printf("Adding new head\n");
+        // head = new;
+        memcpy(head, new, sizeof(struct mtll));
+    }else{
+        struct mtll* cursor = head;
+        while (cursor->next != NULL){
+            cursor = cursor->next;
+        }
+        cursor->next = new;
+    }
+}
+
+
+void mtll_free_all(struct mtll* head){
+    struct mtll* cursor = head;
+    struct mtll* next;
+    while(cursor != NULL){
+        // printf("Freeing: %ld\n", cursor->index);
+        next = cursor->next;
+        mtll_free(cursor);
+        cursor = next;
+    }
+    // mtll_free(cursor);
+}

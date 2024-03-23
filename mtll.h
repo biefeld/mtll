@@ -15,7 +15,7 @@ struct mtll {
 
 extern void mtll_check();
 
-extern struct mtll *mtll_create(size_t * num_nodes, size_t* next_index, void** values, enum TYPE* types);
+extern struct mtll *mtll_create(size_t * num_nodes, size_t* next_index, void** values, enum TYPE** types);
 
 extern void mtll_free(struct mtll * m);
 
@@ -33,5 +33,6 @@ extern void mtll_insert();
 
 extern void mtll_delete();
 
+extern void mtll_append(struct mtll* head, struct mtll* new);
 
 #endif

@@ -10,12 +10,12 @@ enum TYPE {INT, FLOAT, CHAR, STRING, REFERENCE};
 struct node {
     void* val; //Pointer to the value which the node stores
     struct node* next; //Pointer to the next node in the node
-    enum TYPE type; //Type of value for type casting
+    enum TYPE* type; //Type of value for type casting
 };
 
 extern void node_check();
 
-extern struct node *node_create(void* value, enum TYPE type);
+extern struct node *node_create(void* value, enum TYPE* type);
 
 extern void node_free(struct node * n);
 

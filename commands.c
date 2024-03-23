@@ -23,74 +23,133 @@ int valid_node_idx(char* list_idx, char* idx, struct mtll* mtll_head){
 //return 1 if valid, 0 if not. Copy the parsed value into ret.
 int valid_value(char* value, void* ret, enum TYPE* type){
 
-    //we need to check if we have more than 1?
-    if (sscanf(value, "%d", (int*)ret) == 1){
-        printf("Integer\n");
+    char* garbage = calloc(128, sizeof(char)); //this will not do
+
+    if (sscanf(value, "%d%s", (int*)ret, garbage) == 1){
+        // printf("Integer\n");
         *type = INT;
+        free(garbage);
         return 1;
     }
-    if (sscanf(value, "%f", (float*)ret) == 1){
+
+    if (sscanf(value, "%f%s", (float*)ret, garbage) == 1){
         *type = FLOAT;
-        printf("Float\n");
+        // printf("Float\n");
+        free(garbage);
         return 1;
     }
-    if (strlen(value) == 1 && isprint(value)){
+
+    free(garbage);
+
+
+    //-1 is to remove the newline counted
+    if (strlen(value) - 1 == 1 && isprint(value[0])){
+        memcpy(ret, value, 1);
         *type = CHAR;
-        printf("Char\n");
+        // printf("Char\n");
         return 1;
     }
 
     //check for { or } -> {<n>} with valid n sets *type = REFERENCE; otherwise ret 0;
-
-    *type = STRING;
-    printf("String\n");
-    return 1;
-    //scanf("%d") -> ignoring whitespace is good so long as we have 1
-    //scanf("%f") -> ignoring whitespace is good so long as we have 1
-    //strlen() == 1 and isprint() == true
-    //string otherwise, including just a newline and lead/trail whitespace
-    //  - not including { or } except:
     //if we have {<n>}, we need to check n for being a valid, simple list
+
+    memcpy(ret, value, strlen(value));
+    *type = STRING;
+    // printf("String\n");
+    return 1;
 }
 
 
-int parse_values(size_t* num_vals, void** values, enum TYPE* types){
-    char* buff = calloc(sizeof(char), 128); //this will not do
-    void* ret = calloc(sizeof(void), 128);
-    enum TYPE* type = calloc(sizeof(enum TYPE), 1);
-    size_t* read = calloc(sizeof(size_t), 1);
-    int* valid = calloc(sizeof(int), 1);
+void copy_val_type(enum TYPE** types, void** values, enum TYPE* type_read, 
+                                                      void* val_read, size_t n){
+    memcpy(types[n], type_read, sizeof(enum TYPE));
 
-    *read = 0;
-    *valid = 1;
-    // printf("WE OUT HERE %ld|%ld\n", *read, *num_vals);
 
-    //We are using 2 buffers... no good
-    while ((*read) != *(num_vals) && fgets(buff, 128, stdin) != NULL){
-        (*read)++;
-        if (!valid_value(buff, ret, type)){
-            valid = 0;
-        }
-        // printf("%s\n", (char*)ret);
-        //slot into values[*read] and types[*read];
+    switch (*type_read)
+    {
+    case INT:
+        values[n] = realloc(values[n], sizeof(int));
+        memcpy(values[n], val_read, sizeof(int));
+        break;
+
+    case FLOAT:
+        values[n] = realloc(values[n], sizeof(float));
+        memcpy(values[n], val_read, sizeof(float));
+        break;
+
+    case CHAR:
+        values[n] = realloc(values[n], strlen(val_read) + 1);
+        strcpy((void*)values[n], val_read);
+        // memcpy(values[n], val_read, sizeof(char));
+        break;
+
+    case STRING:
+        values[n] = realloc(values[n], strlen(val_read) + 1);
+        // memcpy(values[n], val_read, strlen(val_read) - 1);
+        strcpy((void*)values[n], val_read);
+        break;
+    
+    default:
+        break;
     }
 
-    free(buff);
-    free(ret);
-    free(type);
+    return;
+}
 
-    if (valid && (*read) == (*num_vals)){
-        free(read);
+
+int parse_values(size_t* num_vals, void** values, enum TYPE** types){
+    char* buff = calloc(128, sizeof(char)); //this will not do
+
+
+    //this will be sloted into values
+    void* val_read = calloc(128, sizeof(void));
+
+    //this will be memcpy'd into types
+    enum TYPE* type_read = calloc(1, sizeof(enum TYPE));
+
+    //the number of values we have read so far
+    size_t* num_read = calloc(1, sizeof(size_t));
+
+
+    int* valid = calloc(1, sizeof(int));
+    *valid = 1;
+
+    //read num_vals values OR break if we recieve EOF
+    while ((*num_read) != *(num_vals) && fgets(buff, 128, stdin) != NULL){
+        //set flag if we get an invalid value, but keep reading
+        if (!valid_value(buff, val_read, type_read)){
+            *valid = 0;
+        }
+
+        copy_val_type(types, values, type_read, val_read, *num_read);
+
+        (*num_read)++;
+    }
+
+    //free memory
+    free(buff);
+    free(val_read);
+    free(type_read);
+
+    //If we have received num_vals lots of valid values, all good
+    if (valid && (*num_read) == (*num_vals)){
+        free(num_read);
         free(valid);
         return 1;
     }
 
-    free(read);
+    //in any other case, not good
+    free(num_read);
     free(valid);
     return 0;
-    //Open a buffer, read input. We need to wait until the end to say if it was invalid
-    //Use valid_value to validat each one -> can be reused for INSERT
 }
+
+
+
+
+
+
+//==============================COMMANDS======================================//
 
 
 int new(char* n, size_t* next_list_idx, struct mtll* head){
@@ -103,48 +162,66 @@ int new(char* n, size_t* next_list_idx, struct mtll* head){
         curs++;
     }
 
-    //allocate n spaces of void * so we can access n elements
-    void** values = calloc(sizeof(void *), atoi(n));
-    enum TYPE* types = calloc(sizeof(enum TYPE), atoi(n));
-
     //Convert n into size_t pointer
-    size_t* num_nodes = calloc(sizeof(size_t), 1);
+    size_t* num_nodes = calloc(1, sizeof(size_t));
     *num_nodes = atoi(n);
 
+    //points to first element of list of void*, which initially point to NULL
+    void** values = calloc(*num_nodes, sizeof(void *));
+    
+    //points to first element in list of TYPE*
+    enum TYPE** types = calloc(*num_nodes, sizeof(enum TYPE *));
+    
+    //allocate space which each TYPE* points to
+    for (size_t i = 0; i < *num_nodes; i++){
+        types[i] = calloc(1, sizeof(enum TYPE));
+        values[i] = calloc(1, sizeof(void));
+    }
+
+
     //If the values we got were not value, return and free
+    //parse_values will read, validate and populate (values, types)
     if (!parse_values(num_nodes, values, types)){
-        free(types);
         free(num_nodes);
+        for (size_t i = 0; i < atoi(n); i++){
+            free(types[i]);
+            free(values[i]);
+        }
+        free(types);
         free(values);
         return 0;
     }
 
-    //Make new node
-    printf("Making new mtll\n");
+    // for (size_t i = 0; i < atoi(n); i++){
+    //     printf("%d\n", *types[i]);
+    //     printf("%s\n", (char*)values[i]);
+    // }
+
+    //Make new mtll
+    // printf("Making new mtll\n");
     struct mtll* new = mtll_create(num_nodes, next_list_idx, values, types);
 
     free(num_nodes);
 
-    //Slot into last spot starting from head
-    //We wont have access to the 'new' pointer, as its on the stack
-    //WE will have access to the value 'new' points to
-    //We just need make a copy of the pointer either into head or the last element of the mtll list
-    if (head == NULL){
-        head = new;
-    }else{
-        ;//scan to end and slot into pointer ->next
-        //while curr != NULL, continue. Then set curr->next = new;
-    }
+    //insert new mtll into mtll_list
+    mtll_append(head, new);
+    // mtll_view_all(head);
+
+    free(new);
 
     (*next_list_idx)++;
 
     //Free what we used as temp storage -> we use memcpy to get the values out
+    for (size_t i = 0; i < atoi(n); i++){
+        free(types[i]);
+        free(values[i]);
+    }
     free(types);
     free(values);
     return 1;
 }
 
-int type(char* list_idx, struct mtll* mtll_head){
+int view_type(char* list_idx, struct mtll* mtll_head){
     if (!valid_list_idx(list_idx, mtll_head)){
         return 0;
     }
@@ -153,8 +230,16 @@ int type(char* list_idx, struct mtll* mtll_head){
 }
 
 int view(char* list_idx, struct mtll* mtll_head){
-    if (!valid_list_idx(list_idx, mtll_head) && strcmp(list_idx, "ALL") != 0){
+    if (!valid_list_idx(list_idx, mtll_head) || strcmp(list_idx, "ALL") != 0){
         return 0;
+    }
+
+
+    struct mtll* cursor = mtll_head;
+    while (cursor != NULL){
+        if (cursor->index == atoi(list_idx)){
+            mtll_view(cursor);
+        }
     }
     printf("Display elements\n");
     return 1;
@@ -206,6 +291,11 @@ int view_nested(char* list_idx, struct mtll* mtll_head){
     return 1;
 }
 
+//============================================================================//
+
+
+
+
 
 //One big distributor to the function associated with command
 //Checks if we have the correct number of args for the command
@@ -218,7 +308,7 @@ int call_command(char* command, char** args, int* num_args,
     }
 
     if (strcmp(command, "TYPE") == 0 && *num_args == 1){
-        return type(args[0], mtll_head);
+        return view_type(args[0], mtll_head);
     }
 
     if (strcmp(command, "VIEW") == 0 && *num_args == 1){
