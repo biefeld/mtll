@@ -4,15 +4,7 @@ char* commands[N_COMMANDS] = {"NEW", "VIEW", "TYPE",
                                    "REMOVE", "INSERT", "DELETE", "VIEW-NESTED"};
 
 
-int valid_list_idx(char* list_idx, struct mtll* mtll_head){
-    //We have an empty list
-    if (mtll_head == NULL){
-        return 0;
-    }
-    return 0;
-}
-
-//Could just call valid_list_idx here?
+//Could just call mtll_valid_idx here?
 int valid_node_idx(char* list_idx, char* idx, struct mtll* mtll_head){
     if (mtll_head == NULL){
         return 0;
@@ -222,31 +214,25 @@ int new(char* n, size_t* next_list_idx, struct mtll* head){
 }
 
 int view_type(char* list_idx, struct mtll* mtll_head){
-    if (!valid_list_idx(list_idx, mtll_head)){
-        return 0;
-    }
-    printf("Displaying types\n");
-    return 1;
+    // if (!mtll_valid_idx(list_idx, mtll_head)){
+    //     return 0;
+    // }
+    return mtll_type(list_idx, mtll_head);
+    // printf("Displaying types\n");
 }
 
 int view(char* list_idx, struct mtll* mtll_head){
-    if (!valid_list_idx(list_idx, mtll_head) || strcmp(list_idx, "ALL") != 0){
-        return 0;
+    if (strcmp(list_idx, "ALL") == 0){
+        mtll_view_all(mtll_head);
+        return 1;
     }
+    
+    return mtll_view(list_idx, mtll_head);
 
-
-    struct mtll* cursor = mtll_head;
-    while (cursor != NULL){
-        if (cursor->index == atoi(list_idx)){
-            mtll_view(cursor);
-        }
-    }
-    printf("Display elements\n");
-    return 1;
 }
 
 int rmv(char* list_idx, struct mtll* mtll_head){
-    if (!valid_list_idx(list_idx, mtll_head)){
+    if (!mtll_valid_idx(list_idx, mtll_head)){
         return 0;
     }
     printf("Removing mtll\n");
@@ -254,7 +240,7 @@ int rmv(char* list_idx, struct mtll* mtll_head){
 }
 
 int insert(char* list_idx, char* idx, char* val, struct mtll* mtll_head){
-    if (!valid_list_idx(list_idx, mtll_head)){
+    if (!mtll_valid_idx(list_idx, mtll_head)){
         return 0;
     }
     if (!valid_node_idx(list_idx, idx, mtll_head)){
@@ -273,7 +259,7 @@ int insert(char* list_idx, char* idx, char* val, struct mtll* mtll_head){
 }
 
 int delete(char* list_idx, char* idx, struct mtll* mtll_head){
-    if (!valid_list_idx(list_idx, mtll_head)){
+    if (!mtll_valid_idx(list_idx, mtll_head)){
         return 0;
     }
     if (!valid_node_idx(list_idx, idx, mtll_head)){
@@ -284,7 +270,7 @@ int delete(char* list_idx, char* idx, struct mtll* mtll_head){
 }
 
 int view_nested(char* list_idx, struct mtll* mtll_head){
-    if (!valid_list_idx(list_idx, mtll_head)){
+    if (!mtll_valid_idx(list_idx, mtll_head)){
         return 0;
     }
     printf("Displaying elements nested\n");

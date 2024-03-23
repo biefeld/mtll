@@ -21,9 +21,9 @@ extern void mtll_free(struct mtll * m);
 
 extern void mtll_free_all(struct mtll * head);
 
-extern void mtll_view(struct mtll * m);
+extern int mtll_view(char* list_idx, struct mtll * head);
 
-extern void mtll_type(struct mtll * m);
+extern int mtll_type(char* list_idx, struct mtll * head);
 
 extern void mtll_view_all(struct mtll * head);
 
@@ -34,5 +34,7 @@ extern void mtll_insert();
 extern void mtll_delete();
 
 extern void mtll_append(struct mtll* head, struct mtll* new);
+
+extern struct mtll* mtll_valid_idx(char* idx, struct mtll* head);
 
 #endif

@@ -73,13 +73,15 @@ struct node *node_create(void* value, enum TYPE* type){
         break;
 
     case CHAR:
-        n->val = realloc(n->val, sizeof(char));
-        memcpy(n->val, value, sizeof(char));
+        n->val = realloc(n->val, strlen(value) + 1);
+        strcpy((void*)n->val, value);
         break;
 
     case STRING:
-        n->val = realloc(n->val, strlen(value));
-        memcpy(n->val, value, strlen(value) - 1);
+        n->val = realloc(n->val, strlen(value) + 1);
+        strcpy((void*)n->val, value);
+        char* x = n->val + strlen(value) - 1;
+        memcpy(x, "\0", 1); //Hacky way to trim trailing \n 
         break;
     
     default:

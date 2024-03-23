@@ -96,7 +96,12 @@ void mtll_remove(struct mtll * head, size_t n){
 
 
 
-void mtll_view(struct mtll * m){
+int mtll_view(char* list_idx, struct mtll * head){
+    struct mtll* m = mtll_valid_idx(list_idx, head);
+    if (m == NULL){
+        return 0;
+    }
+
     struct node* curr = m->head;
     char* val = calloc(sizeof(char), 40);
 
@@ -110,9 +115,14 @@ void mtll_view(struct mtll * m){
     printf("%s\n", val);
     
     free(val);
+    return 1;
 }
 
-void mtll_type(struct mtll * m){
+int mtll_type(char* list_idx, struct mtll * head){
+    struct mtll* m = mtll_valid_idx(list_idx, head);
+    if (m == NULL){
+        return 0;
+    }
     struct node* curr = m->head;
     char* val = calloc(sizeof(char), 40);
 
@@ -126,6 +136,7 @@ void mtll_type(struct mtll * m){
     printf("%s\n", val);
     
     free(val);
+    return 1;
 }
 
 void mtll_view_all(struct mtll * head){
@@ -171,4 +182,17 @@ void mtll_free_all(struct mtll* head){
         cursor = next;
     }
     // mtll_free(cursor);
+}
+
+
+struct mtll* mtll_valid_idx(char* idx, struct mtll* head){
+    struct mtll* cursor = head;
+    while(cursor != NULL){
+        if (cursor->index == atoi(idx)){
+            return cursor;
+        }
+        cursor = cursor->next;
+    }
+    return NULL;
+
 }
