@@ -20,8 +20,6 @@ int main(int argc, char** argv) {
     // node_check();
     // mtll_check();
 
-    printf("BEFORE ALLOC\n");
-
     //Allocate memory we will use for each input
     char* buffer = calloc(BUFFER, sizeof(char));
     char* command = calloc(BUFFER, sizeof(char));
@@ -42,20 +40,19 @@ int main(int argc, char** argv) {
     size_t* next_list_idx = calloc(1, sizeof(size_t));
     
 
-    printf("AFTER ALLOC\n");
     //For each line of stdin, parse input and call command if valid
     //parse_input will populate command, args, num_args during parsing
     //call_command will call the function associated with the command parsed
 
     while(fgets(buffer, BUFFER, stdin) != NULL){
-        printf("BUFFER: %s\n", buffer);
-        if (parse_input(buffer, command, args, num_args)){
-            // debug_output(buffer, command, args, num_args, next_list_idx);
+        printf("%s\n", buffer);
+        // if (parse_input(buffer, command, args, num_args)){
+        //     // debug_output(buffer, command, args, num_args, next_list_idx);
 
-            if (!call_command(command, args, num_args, mtll_head, next_list_idx)){
-                printf("INVALID COMMAND: %s\n", command);
-            }
-        }
+        //     if (!call_command(command, args, num_args, mtll_head, next_list_idx)){
+        //         printf("INVALID COMMAND: %s\n", command);
+        //     }
+        // }
     }
 
     //Free remaining mtll's, node's and value's
