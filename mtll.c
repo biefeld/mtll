@@ -66,7 +66,7 @@ int mtll_view(char* list_idx, struct mtll** head_ptr){
     }
 
     struct node* curr = m->head;
-    char* val = calloc(40, sizeof(char));
+    char* val = calloc(BUFFER, sizeof(char));
 
     while (curr->next != NULL){
         node_val(curr, val);
@@ -118,7 +118,7 @@ int mtll_type(char* list_idx, struct mtll** head_ptr){
         return 0;
     }
     struct node* curr = m->head;
-    char* val = calloc(40, sizeof(char));
+    char* val = calloc(BUFFER, sizeof(char));
 
     while (curr->next != NULL){
         node_type(curr, val);
