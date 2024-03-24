@@ -57,6 +57,9 @@ void mtll_free_all(struct mtll* head){
 }
 
 int mtll_view(char* list_idx, struct mtll** head_ptr){
+    if ((*head_ptr)->index == -1){
+        return 0;
+    }
     struct mtll* m = mtll_valid_idx(list_idx, *head_ptr);
     if (m == NULL){
         return 0;
@@ -146,17 +149,20 @@ int mtll_remove(char* list_idx, struct mtll** head_ptr){
         
         //clear head and set idx = -1
         if ((*head_ptr)->next == NULL){
-            //Clear nodes in the linked list
-            struct node* cursor = m->head;
-            struct node* next;
-            while (cursor != NULL){
-                next = cursor->next;
-                node_free(cursor);
-                cursor = next;
-            }
-            
-            //set head to sentinel value
+            mtll_free(m);
+            *head_ptr = calloc(1, sizeof(struct mtll));
             (*head_ptr)->index = -1;
+            // //Clear nodes in the linked list
+            // struct node* cursor = (*head_ptr)->head;
+            // struct node* next;
+            // while (cursor != NULL){
+            //     next = cursor->next;
+            //     node_free(cursor);
+            //     cursor = next;
+            // }
+            
+            // //set head to sentinel value
+            // (*head_ptr)->index = -1;
             printf("List %s has been removed.\n\n", list_idx);
             mtll_view_all(head_ptr);
             return 1;
@@ -250,7 +256,7 @@ int mtll_insert(char* list_idx, char* idx, char* val, struct mtll** head_ptr){
         return 0;
     }
 
-    //This is repeated
+    //This is a bit repeated
     if (*m_len == -1){
         switch (*type)
         {
@@ -270,9 +276,11 @@ int mtll_insert(char* list_idx, char* idx, char* val, struct mtll** head_ptr){
             break;
 
         case STRING:
+            printf("VALUE TO INSERT:|%s|\n", (char*)ret);
+            //may be of use: strcspn(val_read, "\n")
             m->head->val = realloc(m->head->val, strlen(ret) + 1);
             strcpy((void*)m->head->val, ret);
-            char* x = m->head->val + strlen(ret) - 1;
+            char* x = m->head->val + strlen(ret);
             memcpy(x, "\0", 1); //Hacky way to trim trailing \n 
             break;
         default:
