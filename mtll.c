@@ -279,26 +279,22 @@ struct mtll* mtll_valid_idx(char* idx, struct mtll* head){
 
 }
 
-void mtll_length(struct mtll* m, size_t* m_len){
+void mtll_length(struct mtll* m, int* m_len){
     struct node* cursor = m->head;
     while (cursor != NULL){
-        m_len++;
+        (*m_len)++;
         cursor = cursor->next;
     }
 }
 
 
 int mtll_insert(char* list_idx, char* idx, char* val, struct mtll* head){
-    
+
     //get the list we need to insert into using valid_list_idx
     struct mtll* m = mtll_valid_idx(list_idx, head);
     if (m == NULL){
         return 0;
     }
-
-    printf("LIST BEFORE:");
-    mtll_view(list_idx, head);
-    
 
     void* ret = calloc(128, sizeof(void));
     enum TYPE* type = calloc(1, sizeof(enum TYPE));
@@ -310,14 +306,17 @@ int mtll_insert(char* list_idx, char* idx, char* val, struct mtll* head){
         return 0;
     }
 
-    size_t* m_len = calloc(1, sizeof(size_t));
+    //Get the length of the mtll
+    int* m_len = calloc(1, sizeof(int));
 
-    //validate the node_idx -> |idx| - 1 <= length
     mtll_length(m, m_len);
 
+    //Convert idx into a size_t for easy use
+    int* s_idx = calloc(1, sizeof(int));
+    *s_idx = atoi(idx);
 
-    size_t* s_idx = calloc(1, sizeof(size_t));
-    if (!snprintf(idx, 128, "%zu", *s_idx)){
+    //atoi will return 0 if cannot convert -> check that any 0's are valid
+    if (*s_idx == 0 && strcmp(idx, "0") != 0){
         free(s_idx);
         free(m_len);
         free(ret);
@@ -325,8 +324,15 @@ int mtll_insert(char* list_idx, char* idx, char* val, struct mtll* head){
         return 0;
     }
 
-    //if idx is within the range of the list
-    if (abs(*s_idx) - 1 <= *m_len){
+    // printf("%d|%d -> %d\n", *s_idx, *m_len, ;
+
+    // printf("[%d:%d]\n", ((*m_len)*-1)-1, (*m_len));
+
+    //must be in range [-m_len-2:m_len+1]
+    if (!(
+        (*s_idx) >= ((-1 * (*m_len)) - 1) && 
+        (*s_idx) <= (*m_len)
+    )){
         free(s_idx);
         free(m_len);
         free(ret);
@@ -334,12 +340,37 @@ int mtll_insert(char* list_idx, char* idx, char* val, struct mtll* head){
         return 0;
     }
 
-    printf("Inserting %s into index:%ld\n", val, *s_idx);
+    //if idx is negative -> insert into s_idx + m_len + 1 slot
+    if (*s_idx < 0){
+        *s_idx += *m_len + 1;
+    }
 
 
-    //insert so that the value takes the spot of idx
-    //if idx is negative -> insert into idx + size(list) + 1 slot
+    //actually insert into list now
+    // printf("Inserting %s into index:%d\n", val, *s_idx);
 
+    struct node* new = node_create(ret, type);
+    int* pos = calloc(1, sizeof(int));
+    struct node* cursor;
+
+    //were inserting into head
+    if (*s_idx == 0){
+        new->next = m->head;
+        m->head = new;
+    } else{
+        cursor = m->head;
+        while (*pos != *s_idx - 1){
+            cursor = cursor->next;
+            (*pos)++;
+        }
+        struct node* next = cursor->next;
+        new->next = next;
+        cursor->next = new;
+    }
+
+    mtll_post_view(list_idx, head);
+
+    free(pos);
     free(s_idx);
     free(m_len);
     free(ret);

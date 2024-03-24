@@ -7,6 +7,9 @@ int valid_value(char* value, void* ret, enum TYPE* type){
 
     char* garbage = calloc(128, sizeof(char)); //this will not do
 
+    //Sometimes some of the last buffer makes its way in and messes things up 
+    memset(ret, 0, strlen(ret));
+
     if (sscanf(value, "%d%s", (int*)ret, garbage) == 1){
         // printf("Integer\n");
         *type = INT;
