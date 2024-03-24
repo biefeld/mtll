@@ -460,7 +460,6 @@ int mtll_delete(char* list_idx, char* idx, struct mtll* head){
         free(type);
         free(m_len);
         free(ret);
-        free(type);
         return 1;
     }
 
