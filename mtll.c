@@ -302,12 +302,28 @@ void mtll_length(struct mtll* m, int* m_len){
     }
 }
 
+int mtll_valid_node_idx(char* idx){
+    if (!isdigit(idx[0]) && idx[0] != '-' && idx[0] != '+'){
+        return 0;
+    }
+    for (size_t i = 1; i < strlen(idx); i++){
+        if (!isdigit(idx[i])){
+            return 0;
+        }
+    }
+    return 1;
+}
+
 
 int mtll_insert(char* list_idx, char* idx, char* val, struct mtll* head){
 
     //get the list we need to insert into using valid_list_idx
     struct mtll* m = mtll_valid_idx(list_idx, head);
     if (m == NULL){
+        return 0;
+    }
+
+    if (!mtll_valid_node_idx(idx)){
         return 0;
     }
 
@@ -328,7 +344,26 @@ int mtll_insert(char* list_idx, char* idx, char* val, struct mtll* head){
 
     //Convert idx into a size_t for easy use
     int* s_idx = calloc(1, sizeof(int));
-    *s_idx = atoi(idx);
+  
+    // if (!isdigit(idx[0]) && idx[0] != '-' && idx[0] != '+'){
+    //     free(s_idx);
+    //     free(m_len);
+    //     free(ret);
+    //     free(type);
+    //     return 0;
+    // }
+    // for (size_t i = 1; i < strlen(idx); i++){
+    //     if (!isdigit(idx[i])){
+    //         free(s_idx);
+    //         free(m_len);
+    //         free(ret);
+    //         free(type);
+    //         return 0;
+    //     }
+    // }
+    sscanf(idx, "%d", s_idx);
+    // printf("idx:%s, s_idx:%d\n", idx, *s_idx);
+    // *s_idx = atoi(idx);
 
     //atoi will return 0 if cannot convert -> check that any 0's are valid
     if (*s_idx == 0 && strcmp(idx, "0") != 0){
@@ -438,6 +473,10 @@ int mtll_delete(char* list_idx, char* idx, struct mtll* head){
         return 0;
     }
 
+    if (!mtll_valid_node_idx(idx)){
+        return 0;
+    }
+
     void* ret = calloc(128, sizeof(void));
     enum TYPE* type = calloc(1, sizeof(enum TYPE));
 
@@ -445,6 +484,8 @@ int mtll_delete(char* list_idx, char* idx, struct mtll* head){
     int* m_len = calloc(1, sizeof(int));
 
     mtll_length(m, m_len);
+
+    
 
     if (*m_len == 1){
         int* value = malloc(sizeof(int));

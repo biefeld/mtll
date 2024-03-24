@@ -109,6 +109,7 @@ void copy_val_type(enum TYPE** types, void** values, enum TYPE* type_read,
         break;
 
     case STRING:
+        // printf("len:%ld. new_line:%ld\n", strlen(val_read),strcspn(val_read, "\n"));
         values[n] = realloc(values[n], strlen(val_read) + 1);
         // memcpy(values[n], val_read, strlen(val_read) - 1);
         strcpy((void*)values[n], val_read);
@@ -248,12 +249,12 @@ int split_arguments(char* arguments, char** args, int* num_args){
     *curs_len = strlen(curs);
  
 
-    //We found a single space after the 2nd arg, no good
-    if (*space_idx + 1 == *curs_len){
-        free(space_idx);
-        free(curs_len);
-        return 0;
-    }
+    // //We found a single space after the 2nd arg, no good -> this is fine act
+    // if (*space_idx + 1 == *curs_len){
+    //     free(space_idx);
+    //     free(curs_len);
+    //     return 0;
+    // }
 
     //copy upto the next space into args[1]
     memcpy(args[1], curs, *space_idx);
