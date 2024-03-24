@@ -35,7 +35,24 @@ int new(char* n, size_t* next_list_idx, struct mtll** mtll_head_ptr){
 
     //If the values we got were not value, return and free
     //parse_values will read, validate and populate (values, types)
-    if (!parse_values(num_nodes, values, types)){
+    int* ret = calloc(1, sizeof(int));
+    *ret = parse_values(num_nodes, values, types);
+
+    //-1 indicates EOF early
+    if (*ret == -1){
+        free(ret);
+        free(num_nodes);
+        for (size_t i = 0; i < atoi(n); i++){
+            free(types[i]);
+            free(values[i]);
+        }
+        free(types);
+        free(values);
+        return 1;
+    }
+
+    if (*ret == 0){
+        free(ret);
         free(num_nodes);
         for (size_t i = 0; i < atoi(n); i++){
             free(types[i]);
@@ -45,6 +62,8 @@ int new(char* n, size_t* next_list_idx, struct mtll** mtll_head_ptr){
         free(values);
         return 0;
     }
+
+    free(ret);
 
     //Make new mtll
     struct mtll* new = mtll_create(num_nodes, next_list_idx, values, types);

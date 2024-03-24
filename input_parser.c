@@ -157,6 +157,13 @@ int parse_values(size_t* num_vals, void** values, enum TYPE** types){
     free(val_read);
     free(type_read);
 
+    //we returned early for some reason
+    if ((*num_read) != *(num_vals)){
+        free(num_read);
+        free(valid);
+        return -1;
+    }
+
     //If we have received num_vals lots of valid values, all good
     if (*valid && (*num_read) == (*num_vals)){
         free(num_read);
