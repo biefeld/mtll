@@ -51,19 +51,28 @@ int valid_value(char* value, void* ret, enum TYPE* type){
     }
 
 
+    //we do not begin and end with { and }
     if (*open_brace_idx != 0){
         free(open_brace_idx);
         free(close_brace_idx);
         return 0;
     }
 
-     if (*close_brace_idx != 2 && strlen(value) != 2){
+     if (*close_brace_idx != strlen(value) - 2){
         free(open_brace_idx);
         free(close_brace_idx);
         return 0;
     }
 
-
+    //We have non-digit characters
+    for (size_t i = 1; i < strlen(value) - 2; i++){
+        // printf("%ld: %c\n",i, value[i]);
+        if(!isdigit(value[i])){
+            free(open_brace_idx);
+            free(close_brace_idx);
+            return 0;
+        }
+    }
 
     free(open_brace_idx);
     free(close_brace_idx);
@@ -295,16 +304,35 @@ int parse_input(char* buffer, char* command, char** args, int* num_args){
     size_t* space_idx = malloc(1 * sizeof(size_t));
     *space_idx = strcspn(buffer, " ");
 
-    //If we have a leading space, or no spaces
-    if (*space_idx == 0 || *space_idx == strlen(buffer)){
+    //If we have a leading space
+    if (*space_idx == 0 ){
         printf("INVALID COMMAND: INPUT\n");
         free(space_idx);
         return 0;
     }
 
+    
+    //If we have no space
+    if (*space_idx == strlen(buffer)){
+
+        //If there isnt a command keyword match - print INPUT
+        if (!valid_command_keyword(command)){
+            printf("INVALID COMMAND: INPUT\n");
+            free(space_idx);
+            return 0;
+        }
+
+        //Check if there is a command that matches - print <COMMAND>
+        printf("INVALID COMMAND: %s\n", command);
+        free(space_idx);
+        return 0;
+    }
+
+
     //clear command and copy up to the first space
     memset(command, 0, BUFFER);
     memcpy(command, buffer, *space_idx);
+
 
     //Ensure that we have a valid keyword (e.g. NEW)
     if (!valid_command_keyword(command)){
