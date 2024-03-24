@@ -250,7 +250,7 @@ void mtll_free_all(struct mtll* head){
     struct mtll* cursor = head;
     struct mtll* next;
     while(cursor != NULL){
-        printf("Freeing: %ld\n", cursor->index);
+        // printf("Freeing: %ld\n", cursor->index);
         next = cursor->next;
         mtll_free(cursor);
         cursor = next;
