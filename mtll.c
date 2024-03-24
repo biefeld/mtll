@@ -62,7 +62,7 @@ struct mtll *mtll_create(size_t * num_nodes, size_t* next_index, void** values, 
         int* value = malloc(sizeof(int));
         *value = -1;
         enum TYPE* type = malloc(sizeof(enum TYPE));
-        *type = INT;
+        *type = NaT;
         m->head = node_create((void*)value, type);
         free(value);
         free(type);
@@ -290,7 +290,7 @@ struct mtll* mtll_valid_idx(char* idx, struct mtll* head){
 }
 
 void mtll_length(struct mtll* m, int* m_len){
-    if (*(m->head->type) == INT && *((int*)m->head->val) == -1){
+    if (*(m->head->type) == NaT){
         *m_len = -1;
         return;
     }
@@ -491,7 +491,7 @@ int mtll_delete(char* list_idx, char* idx, struct mtll* head){
         int* value = malloc(sizeof(int));
         *value = -1;
         enum TYPE* type = malloc(sizeof(enum TYPE));
-        *type = INT;
+        *type = NaT;
         memcpy(m->head->val, value, sizeof(int));
         memcpy(m->head->type, type, sizeof(enum TYPE));
         

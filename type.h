@@ -7,6 +7,6 @@
 
 extern char* commands[N_COMMANDS];
 
-enum TYPE {INT, FLOAT, CHAR, STRING, REFERENCE};
+enum TYPE {INT, FLOAT, CHAR, STRING, REFERENCE, NaT=-1};
 
 #endif

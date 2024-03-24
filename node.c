@@ -104,7 +104,7 @@ void node_free(struct node* n){
 
 
 void node_val(struct node * n, char * ret){
-    if (*n->type == INT && *(int*)n->val == -1){
+    if (*n->type == NaT){
         return;
     }
 
@@ -125,12 +125,15 @@ void node_val(struct node * n, char * ret){
     case REFERENCE:
         strcpy(ret, "{placeholder}");
         break;
+    
+    default:
+        break;
     }
 }
 
 //Must free the returned char after
 void node_type(struct node * n, char * ret){
-    if (*n->type == INT && *(int*)n->val == -1){
+    if (*n->type == NaT){
         return;
     }
     
@@ -150,6 +153,9 @@ void node_type(struct node * n, char * ret){
         break;
     case REFERENCE:
         strcpy(ret, "reference");
+        break;
+
+    default:
         break;
     }
 }
