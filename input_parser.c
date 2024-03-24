@@ -311,9 +311,14 @@ int parse_input(char* buffer, char* command, char** args, int* num_args){
         return 0;
     }
 
-    
+        //clear command and copy up to the first space
+    memset(command, 0, BUFFER);
+
+
     //If we have no space
     if (*space_idx == strlen(buffer)){
+
+        memcpy(command, buffer, *space_idx - 1);
 
         //If there isnt a command keyword match - print INPUT
         if (!valid_command_keyword(command)){
@@ -328,10 +333,8 @@ int parse_input(char* buffer, char* command, char** args, int* num_args){
         return 0;
     }
 
-
-    //clear command and copy up to the first space
-    memset(command, 0, BUFFER);
     memcpy(command, buffer, *space_idx);
+
 
 
     //Ensure that we have a valid keyword (e.g. NEW)
