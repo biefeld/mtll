@@ -2,6 +2,7 @@
 #include "node.h"
 #include "input_parser.h"
 #include "commands.h"
+#include "type.h"
 
 void debug_output(char* buffer, char* command, char** args, int* num_args, size_t* next_list_idx){
     printf("\n============================\nWAS ABLE TO PARSE THE ARGUMENTS\n");

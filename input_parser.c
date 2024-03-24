@@ -5,7 +5,7 @@
 //return 1 if valid, 0 if not. Copy the parsed value into ret.
 int valid_value(char* value, void* ret, enum TYPE* type){
 
-    char* garbage = calloc(128, sizeof(char)); //this will not do
+    char* garbage = calloc(BUFFER, sizeof(char)); 
 
     //Sometimes some of the last buffer makes its way in and messes things up 
     memset(ret, 0, strlen(ret));
@@ -133,11 +133,11 @@ void copy_val_type(enum TYPE** types, void** values, enum TYPE* type_read,
 
 
 int parse_values(size_t* num_vals, void** values, enum TYPE** types){
-    char* buff = calloc(128, sizeof(char)); //this will not do
+    char* buff = calloc(BUFFER, sizeof(char)); 
 
 
     //this will be sloted into values
-    void* val_read = calloc(128, sizeof(void));
+    void* val_read = calloc(BUFFER, sizeof(void));
 
     //this will be memcpy'd into types
     enum TYPE* type_read = calloc(1, sizeof(enum TYPE));
@@ -150,7 +150,7 @@ int parse_values(size_t* num_vals, void** values, enum TYPE** types){
     *valid = 1;
 
     //read num_vals values OR break if we recieve EOF
-    while ((*num_read) != *(num_vals) && fgets(buff, 128, stdin) != NULL){
+    while ((*num_read) != *(num_vals) && fgets(buff, BUFFER, stdin) != NULL){
         //set flag if we get an invalid value, but keep reading
         if (!valid_value(buff, val_read, type_read)){
             *valid = 0;
