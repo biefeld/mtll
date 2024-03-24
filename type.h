@@ -1,7 +1,7 @@
 #ifndef TYPE_H
 #define TYPE_H
 
-#define BUFFER (129)
+#define BUFFER (130)
 #define MAX_ARGS (3)
 #define N_COMMANDS (7)
 
