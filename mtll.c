@@ -1,51 +1,5 @@
 #include "mtll.h"
 
-
-// void mtll_check(){
-//     size_t* next_idx = calloc(sizeof(size_t), 1);
-//     size_t* num_nodes = calloc(sizeof(size_t), 1);
-//     void** values = calloc(sizeof(void*), 5);
-//     char* a = malloc(sizeof(char));
-//     *a = 'a';
-//     for (int i = 0; i < 5; i++){
-//         values[i] = calloc(sizeof(char), 1);
-//         memcpy(values[i], a, 1);
-//         (*a)++;
-//     }
-//     enum TYPE* types = calloc(sizeof(enum TYPE), 5);
-//     for (int i = 0; i < 5; i++){
-//         types[i] = CHAR;
-//     }
-//     *num_nodes = 5;
-//     *next_idx = 4;
-
-//     struct mtll* m = mtll_create(num_nodes, next_idx, values, types);
-
-//     for (int i = 0; i < 5; i++){
-//         free(values[i]);
-//     }
-
-//     free(a);
-//     free(values);
-//     free(types);
-//     free(num_nodes);
-//     free(next_idx);
-
-//     printf("Head:%p Next:%p Idx:%ld Nested?:%d References:%d\n", m->head, m->next, m->index, m->has_nested, m->num_references);
-//     struct node* curr = m->head;
-//     while (curr != NULL){
-//         printf("%p: %c, %d, %p\n", curr, *(char*)curr->val, curr->type, curr->next);
-//         curr = curr->next;
-
-//     }
-//     mtll_view(m);
-//     mtll_type(m);
-//     mtll_view_all(m);
-//     mtll_free(m);
-
-
-// }
-
 struct mtll *mtll_create(size_t * num_nodes, size_t* next_index, void** values, enum TYPE ** types){
     struct mtll* m = malloc(sizeof(struct mtll));
     if (m == NULL){
@@ -79,8 +33,7 @@ struct mtll *mtll_create(size_t * num_nodes, size_t* next_index, void** values, 
     return m;
 }
 
-void mtll_free(struct mtll * m){
-    //call mtll_remove until we head = NULL?
+void mtll_free(struct mtll* m){
     struct node* cursor = m->head;
     struct node* next;
     while (cursor != NULL){
@@ -88,81 +41,23 @@ void mtll_free(struct mtll * m){
         node_free(cursor);
         cursor = next;
     }
-    // node_free(curr);
     free(m);
 }
 
-
-int mtll_remove(char* list_idx, struct mtll * head){
-    struct mtll* m = mtll_valid_idx(list_idx, head);
-    if (m == NULL){
-        return 0;
-    }
-
-    // printf("REMOVE %ld INDEX\n", m->index);
-
-    struct mtll* prev = NULL;
+void mtll_free_all(struct mtll* head){
     struct mtll* cursor = head;
-
-    //special case - we remove the head
-    if (head->index == m->index){
-        
-        //clear head and set idx = -1
-        if (head->next == NULL){
-            //Clear nodes in the linked list
-            struct node* cursor = m->head;
-            struct node* next;
-            while (cursor != NULL){
-                next = cursor->next;
-                node_free(cursor);
-                cursor = next;
-            }
-            
-            //set head to sentinel value
-            head->index = -1;
-            printf("List %s has been removed\n\n", list_idx);
-            mtll_view_all(head);
-            return 1;
-        }
-
-        //otherwise, shift head up 1 and clear old head
-
-        printf("THIS REMOVE IS NOT WORKING\n");
-        return 1;
-    }
-
-    prev = cursor;
-    cursor = cursor->next;
-
+    struct mtll* next;
     while(cursor != NULL){
-        if (cursor->index == m->index){
-            prev->next = cursor->next;
-            mtll_free(cursor);
-            printf("List %s has been removed\n\n", list_idx);
-            mtll_view_all(head);
-            return 1;
-        }
-        prev = cursor;
-        cursor = cursor->next;
+        // printf("Freeing: %ld\n", cursor->index);
+        next = cursor->next;
+        mtll_free(cursor);
+        cursor = next;
     }
-
-    return 0;
+    // mtll_free(cursor);
 }
 
-
-
-void mtll_post_view(char* list_idx, struct mtll * head){
-    struct mtll* m = mtll_valid_idx(list_idx, head);
-    if (m->is_nested){
-        printf("Nested %ld: ", m->index);
-    }else{
-        printf("List %ld: ", m->index);
-    }
-    mtll_view(list_idx, head);
-}
-
-int mtll_view(char* list_idx, struct mtll * head){
-    struct mtll* m = mtll_valid_idx(list_idx, head);
+int mtll_view(char* list_idx, struct mtll** head_ptr){
+    struct mtll* m = mtll_valid_idx(list_idx, *head_ptr);
     if (m == NULL){
         return 0;
     }
@@ -183,8 +78,39 @@ int mtll_view(char* list_idx, struct mtll * head){
     return 1;
 }
 
-int mtll_type(char* list_idx, struct mtll * head){
-    struct mtll* m = mtll_valid_idx(list_idx, head);
+void mtll_view_all(struct mtll** head_ptr){
+    if ((*head_ptr)->index == -1){
+        printf("Number of lists: 0\n");
+        return;
+    }
+
+
+    struct mtll* curr = (*head_ptr);
+    int* num = calloc(1, sizeof(int));
+
+    while (curr != NULL){
+        (*num)++;
+        curr = curr->next;
+    }
+
+    printf("Number of lists: %d\n", *num);
+
+    curr = (*head_ptr);
+
+    while (curr != NULL){
+        if (curr->is_nested){
+            printf("Nested %ld\n", curr->index);
+        }else{
+            printf("List %ld\n", curr->index);
+        }
+        curr = curr->next;
+    }
+
+    free(num);
+}
+
+int mtll_type(char* list_idx, struct mtll** head_ptr){
+    struct mtll* m = mtll_valid_idx(list_idx, *head_ptr);
     if (m == NULL){
         return 0;
     }
@@ -204,121 +130,71 @@ int mtll_type(char* list_idx, struct mtll * head){
     return 1;
 }
 
-void mtll_view_all(struct mtll * head){
-    if (head->index == -1){
-        printf("Number of lists: 0\n");
-        return;
-    }
-
-
-    struct mtll* curr = head;
-    int* num = calloc(1, sizeof(int));
-
-    while (curr != NULL){
-        (*num)++;
-        curr = curr->next;
-    }
-
-    printf("Number of lists: %d\n", *num);
-
-    curr = head;
-
-    while (curr != NULL){
-        if (curr->is_nested){
-            printf("Nested %ld\n", curr->index);
-        }else{
-            printf("List %ld\n", curr->index);
-        }
-        curr = curr->next;
-    }
-
-    free(num);
-}
-
-
-
-void mtll_append(struct mtll* head, struct mtll* new){
-    //printf("HEADINDEX%ld\n", head->index);
-    if (head->index == -1){
-        // printf("Adding new head\n");
-        // head = new;
-        memcpy(head, new, sizeof(struct mtll));
-    }else{
-        struct mtll* cursor = head;
-        while (cursor->next != NULL){
-            cursor = cursor->next;
-        }
-        struct mtll* next_new = malloc(sizeof(struct mtll));
-        cursor->next = next_new;
-        memcpy(next_new, new, sizeof(struct mtll));
-        // cursor->next = new;
-    }
-}
-
-
-void mtll_free_all(struct mtll* head){
-    struct mtll* cursor = head;
-    struct mtll* next;
-    while(cursor != NULL){
-        // printf("Freeing: %ld\n", cursor->index);
-        next = cursor->next;
-        mtll_free(cursor);
-        cursor = next;
-    }
-    // mtll_free(cursor);
-}
-
-
-struct mtll* mtll_valid_idx(char* idx, struct mtll* head){
-    if (head->index == -1){
-        return NULL;
-    }
-    for (size_t i = 0; i < strlen(idx); i++){
-        if (!isdigit(idx[i])){
-            return NULL;
-        }
-    }
-    struct mtll* cursor = head;
-    while(cursor != NULL){
-        if (cursor->index == atoi(idx)){
-            return cursor;
-        }
-        cursor = cursor->next;
-    }
-    return NULL;
-
-}
-
-void mtll_length(struct mtll* m, int* m_len){
-    if (*(m->head->type) == NaT){
-        *m_len = -1;
-        return;
-    }
-    
-    struct node* cursor = m->head;
-    while (cursor != NULL){
-        (*m_len)++;
-        cursor = cursor->next;
-    }
-}
-
-int mtll_valid_node_idx(char* idx){
-    if (!isdigit(idx[0]) && idx[0] != '-' && idx[0] != '+'){
+int mtll_remove(char* list_idx, struct mtll** head_ptr){
+    struct mtll* m = mtll_valid_idx(list_idx, *head_ptr);
+    if (m == NULL){
         return 0;
     }
-    for (size_t i = 1; i < strlen(idx); i++){
-        if (!isdigit(idx[i])){
-            return 0;
+
+    // printf("REMOVE %ld INDEX\n", m->index);
+
+    struct mtll* prev = NULL;
+    struct mtll* cursor = (*head_ptr);
+
+    //special case - we remove the head
+    if ((*head_ptr)->index == m->index){
+        
+        //clear head and set idx = -1
+        if ((*head_ptr)->next == NULL){
+            //Clear nodes in the linked list
+            struct node* cursor = m->head;
+            struct node* next;
+            while (cursor != NULL){
+                next = cursor->next;
+                node_free(cursor);
+                cursor = next;
+            }
+            
+            //set head to sentinel value
+            (*head_ptr)->index = -1;
+            printf("List %s has been removed.\n\n", list_idx);
+            mtll_view_all(head_ptr);
+            return 1;
         }
+
+        //otherwise, shift head up 1 and clear old head
+        (*head_ptr) = (*head_ptr)->next;
+        mtll_free(cursor);
+
+        printf("List %s has been removed.\n\n", list_idx);
+        mtll_view_all(head_ptr);
+
+        // printf("THIS REMOVE IS NOT WORKING\n");
+        return 1;
     }
-    return 1;
+
+    prev = cursor;
+    cursor = cursor->next;
+
+    while(cursor != NULL){
+        if (cursor->index == m->index){
+            prev->next = cursor->next;
+            mtll_free(cursor);
+            printf("List %s has been removed.\n\n", list_idx);
+            mtll_view_all(head_ptr);
+            return 1;
+        }
+        prev = cursor;
+        cursor = cursor->next;
+    }
+
+    return 0;
 }
 
-
-int mtll_insert(char* list_idx, char* idx, char* val, struct mtll* head){
+int mtll_insert(char* list_idx, char* idx, char* val, struct mtll** head_ptr){
 
     //get the list we need to insert into using valid_list_idx
-    struct mtll* m = mtll_valid_idx(list_idx, head);
+    struct mtll* m = mtll_valid_idx(list_idx, *head_ptr);
     if (m == NULL){
         return 0;
     }
@@ -403,7 +279,7 @@ int mtll_insert(char* list_idx, char* idx, char* val, struct mtll* head){
             break;
         }
         memcpy(m->head->type, type, sizeof(enum TYPE));
-        mtll_post_view(list_idx, head);
+        mtll_post_view(list_idx, head_ptr);
         free(s_idx);
         free(m_len);
         free(ret);
@@ -455,7 +331,7 @@ int mtll_insert(char* list_idx, char* idx, char* val, struct mtll* head){
         cursor->next = new;
     }
 
-    mtll_post_view(list_idx, head);
+    mtll_post_view(list_idx, head_ptr);
 
     free(pos);
     free(s_idx);
@@ -465,10 +341,10 @@ int mtll_insert(char* list_idx, char* idx, char* val, struct mtll* head){
     return 1;
 }
 
-int mtll_delete(char* list_idx, char* idx, struct mtll* head){
+int mtll_delete(char* list_idx, char* idx, struct mtll** head_ptr){
 
     //get the list we need to delete from using valid_list_idx
-    struct mtll* m = mtll_valid_idx(list_idx, head);
+    struct mtll* m = mtll_valid_idx(list_idx, *head_ptr);
     if (m == NULL){
         return 0;
     }
@@ -495,7 +371,7 @@ int mtll_delete(char* list_idx, char* idx, struct mtll* head){
         memcpy(m->head->val, value, sizeof(int));
         memcpy(m->head->type, type, sizeof(enum TYPE));
         
-        mtll_post_view(list_idx, head);
+        mtll_post_view(list_idx, head_ptr);
 
         free(value);
         free(type);
@@ -558,7 +434,7 @@ int mtll_delete(char* list_idx, char* idx, struct mtll* head){
         node_free(next);
     }
 
-    mtll_post_view(list_idx, head);
+    mtll_post_view(list_idx, head_ptr);
 
     free(pos);
     free(s_idx);
@@ -566,4 +442,77 @@ int mtll_delete(char* list_idx, char* idx, struct mtll* head){
     free(ret);
     free(type);
     return 1;
+}
+
+void mtll_post_view(char* list_idx, struct mtll** head_ptr){
+    struct mtll* m = mtll_valid_idx(list_idx, *head_ptr);
+    if (m->is_nested){
+        printf("Nested %ld: ", m->index);
+    }else{
+        printf("List %ld: ", m->index);
+    }
+    mtll_view(list_idx, head_ptr);
+}
+
+void mtll_append(struct mtll** head_ptr, struct mtll* new){
+    //printf("HEADINDEX%ld\n", head->index);
+    if ((*head_ptr)->index == -1){
+        // printf("Adding new head\n");
+        // head = new;
+        memcpy((*head_ptr), new, sizeof(struct mtll));
+    }else{
+        struct mtll* cursor = (*head_ptr);
+        while (cursor->next != NULL){
+            cursor = cursor->next;
+        }
+        struct mtll* next_new = malloc(sizeof(struct mtll));
+        cursor->next = next_new;
+        memcpy(next_new, new, sizeof(struct mtll));
+        // cursor->next = new;
+    }
+}
+
+struct mtll* mtll_valid_idx(char* idx, struct mtll* head){
+    if (head->index == -1){
+        return NULL;
+    }
+    for (size_t i = 0; i < strlen(idx); i++){
+        if (!isdigit(idx[i])){
+            return NULL;
+        }
+    }
+    struct mtll* cursor = head;
+    while(cursor != NULL){
+        if (cursor->index == atoi(idx)){
+            return cursor;
+        }
+        cursor = cursor->next;
+    }
+    return NULL;
+
+}
+
+int mtll_valid_node_idx(char* idx){
+    if (!isdigit(idx[0]) && idx[0] != '-' && idx[0] != '+'){
+        return 0;
+    }
+    for (size_t i = 1; i < strlen(idx); i++){
+        if (!isdigit(idx[i])){
+            return 0;
+        }
+    }
+    return 1;
+}
+
+void mtll_length(struct mtll* m, int* m_len){
+    if (*(m->head->type) == NaT){
+        *m_len = -1;
+        return;
+    }
+    
+    struct node* cursor = m->head;
+    while (cursor != NULL){
+        (*m_len)++;
+        cursor = cursor->next;
+    }
 }

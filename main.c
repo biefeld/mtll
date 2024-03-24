@@ -33,8 +33,9 @@ int main(int argc, char** argv) {
     }
 
     //Allocate pointer to mtll_head, and set it pointing to NULL (no head yet)
-    struct mtll* mtll_head = calloc(1, sizeof(struct mtll));
-    mtll_head->index = -1; //sentinel value
+    struct mtll** mtll_head_ptr = calloc(1, sizeof(struct mtll*));
+    *mtll_head_ptr = calloc(1, sizeof(struct mtll));
+    (*mtll_head_ptr)->index = -1; //sentinel value
 
     //Allocate pointer to the next_list_idx, and set it pointing to the value 0
     size_t* next_list_idx = calloc(1, sizeof(size_t));
@@ -48,16 +49,16 @@ int main(int argc, char** argv) {
         if (parse_input(buffer, command, args, num_args)){
             // debug_output(buffer, command, args, num_args, next_list_idx);
 
-            if (!call_command(command, args, num_args, mtll_head, next_list_idx)){
+            if (!call_command(command, args, num_args, mtll_head_ptr, next_list_idx)){
                 printf("INVALID COMMAND: %s\n", command);
             }
         }
-        // printf("HEAD INDEX ATFER %s: %ld\n", command, mtll_head->index);
-        // printf("POINTER AFTER %p\n", mtll_head);
     }
 
+
     //Free remaining mtll's, node's and value's
-    mtll_free_all(mtll_head);
+    mtll_free_all(*mtll_head_ptr);
+    free(mtll_head_ptr);
    
     //Free buffer-like memory
     for (int i=0; i<MAX_ARGS; i++) {
