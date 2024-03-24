@@ -276,11 +276,11 @@ int mtll_insert(char* list_idx, char* idx, char* val, struct mtll** head_ptr){
             break;
 
         case STRING:
-            printf("VALUE TO INSERT:|%s|\n", (char*)ret);
+            // printf("VALUE TO INSERT:|%s|\n", (char*)ret);
             //may be of use: strcspn(val_read, "\n")
             m->head->val = realloc(m->head->val, strlen(ret) + 1);
             strcpy((void*)m->head->val, ret);
-            char* x = m->head->val + strlen(ret);
+            char* x = m->head->val + strcspn(m->head->val, "\n");
             memcpy(x, "\0", 1); //Hacky way to trim trailing \n 
             break;
         default:

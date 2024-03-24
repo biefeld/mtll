@@ -80,7 +80,7 @@ struct node *node_create(void* value, enum TYPE* type){
     case STRING:
         n->val = realloc(n->val, strlen(value) + 1);
         strcpy((void*)n->val, value);
-        char* x = n->val + strlen(value) - 1;
+        char* x = n->val + strcspn(value, "\n");
         memcpy(x, "\0", 1); //Hacky way to trim trailing \n 
         break;
     
