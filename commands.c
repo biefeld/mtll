@@ -6,7 +6,6 @@ char* commands[N_COMMANDS] = {"NEW", "VIEW", "TYPE",
 
 //==============================COMMANDS======================================//
 
-
 int new(char* n, size_t* next_list_idx, struct mtll* head){
     //Little bit of additional argument validation
     char* curs = n;
@@ -86,11 +85,7 @@ int new(char* n, size_t* next_list_idx, struct mtll* head){
 }
 
 int view_type(char* list_idx, struct mtll* mtll_head){
-    // if (!mtll_valid_idx(list_idx, mtll_head)){
-    //     return 0;
-    // }
     return mtll_type(list_idx, mtll_head);
-    // printf("Displaying types\n");
 }
 
 int view(char* list_idx, struct mtll* mtll_head){
@@ -100,7 +95,6 @@ int view(char* list_idx, struct mtll* mtll_head){
     }
     
     return mtll_view(list_idx, mtll_head);
-
 }
 
 int rmv(char* list_idx, struct mtll* mtll_head){
@@ -108,32 +102,23 @@ int rmv(char* list_idx, struct mtll* mtll_head){
 }
 
 int insert(char* list_idx, char* idx, char* val, struct mtll* mtll_head){
-    return mtll_insert(list_idx, idx,  val, mtll_head);
+    return mtll_insert(list_idx, idx, val, mtll_head);
 }
 
 int delete(char* list_idx, char* idx, struct mtll* mtll_head){
-    // if (!mtll_valid_idx(list_idx, mtll_head)){
-    //     return 0;
-    // }
-    // if (!valid_node_idx(list_idx, idx, mtll_head)){
-    //     return 0;
-    // }
-    printf("Deleting element\n");
-    return 1;
+    return mtll_delete(list_idx, idx, mtll_head);
 }
 
 int view_nested(char* list_idx, struct mtll* mtll_head){
     // if (!mtll_valid_idx(list_idx, mtll_head)){
     //     return 0;
     // }
+    //just use view() but with a flag?
     printf("Displaying elements nested\n");
     return 1;
 }
 
 //============================================================================//
-
-
-
 
 
 //One big distributor to the function associated with command

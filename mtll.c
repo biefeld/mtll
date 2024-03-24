@@ -52,6 +52,23 @@ struct mtll *mtll_create(size_t * num_nodes, size_t* next_index, void** values, 
         return NULL;
     }
 
+    m->next = NULL;
+    m->index = *next_index;
+    m->is_nested = 0;
+    m->num_references = 0;
+
+    //create an empty list - head node has sentinel value as value
+    if (*num_nodes == 0){
+        int* value = malloc(sizeof(int));
+        *value = -1;
+        enum TYPE* type = malloc(sizeof(enum TYPE));
+        *type = INT;
+        m->head = node_create((void*)value, type);
+        free(value);
+        free(type);
+        return m;
+    }
+
     m->head = node_create(values[0], types[0]);
     struct node* curr = m->head;
 
@@ -59,13 +76,6 @@ struct mtll *mtll_create(size_t * num_nodes, size_t* next_index, void** values, 
         curr->next = node_create(values[i], types[i]);
         curr = curr->next;
     }
-
-    // m->head = NULL;
-    m->next = NULL;
-    m->index = *next_index;
-    m->is_nested = 0;
-    m->num_references = 0;
-
     return m;
 }
 
@@ -280,6 +290,11 @@ struct mtll* mtll_valid_idx(char* idx, struct mtll* head){
 }
 
 void mtll_length(struct mtll* m, int* m_len){
+    if (*(m->head->type) == INT && *((int*)m->head->val) == -1){
+        *m_len = -1;
+        return;
+    }
+    
     struct node* cursor = m->head;
     while (cursor != NULL){
         (*m_len)++;
@@ -324,6 +339,43 @@ int mtll_insert(char* list_idx, char* idx, char* val, struct mtll* head){
         return 0;
     }
 
+    //This is repeated
+    if (*m_len == -1){
+        switch (*type)
+        {
+        case INT:
+            m->head->val = realloc(m->head->val, sizeof(int));
+            memcpy(m->head->val, ret, sizeof(int));
+            break;
+
+        case FLOAT:
+            m->head->val = realloc(m->head->val, sizeof(float));
+            memcpy(m->head->val, ret, sizeof(float));
+            break;
+
+        case CHAR:
+            m->head->val = realloc(m->head->val, strlen(ret) + 1);
+            strcpy((void*)m->head->val, ret);
+            break;
+
+        case STRING:
+            m->head->val = realloc(m->head->val, strlen(ret) + 1);
+            strcpy((void*)m->head->val, ret);
+            char* x = m->head->val + strlen(ret) - 1;
+            memcpy(x, "\0", 1); //Hacky way to trim trailing \n 
+            break;
+        default:
+            break;
+        }
+        memcpy(m->head->type, type, sizeof(enum TYPE));
+        mtll_post_view(list_idx, head);
+        free(s_idx);
+        free(m_len);
+        free(ret);
+        free(type);
+        return 1;
+    }
+
     // printf("%d|%d -> %d\n", *s_idx, *m_len, ;
 
     // printf("[%d:%d]\n", ((*m_len)*-1)-1, (*m_len));
@@ -366,6 +418,104 @@ int mtll_insert(char* list_idx, char* idx, char* val, struct mtll* head){
         struct node* next = cursor->next;
         new->next = next;
         cursor->next = new;
+    }
+
+    mtll_post_view(list_idx, head);
+
+    free(pos);
+    free(s_idx);
+    free(m_len);
+    free(ret);
+    free(type);
+    return 1;
+}
+
+int mtll_delete(char* list_idx, char* idx, struct mtll* head){
+
+    //get the list we need to delete from using valid_list_idx
+    struct mtll* m = mtll_valid_idx(list_idx, head);
+    if (m == NULL){
+        return 0;
+    }
+
+    void* ret = calloc(128, sizeof(void));
+    enum TYPE* type = calloc(1, sizeof(enum TYPE));
+
+    //Get the length of the mtll
+    int* m_len = calloc(1, sizeof(int));
+
+    mtll_length(m, m_len);
+
+    if (*m_len == 1){
+        int* value = malloc(sizeof(int));
+        *value = -1;
+        enum TYPE* type = malloc(sizeof(enum TYPE));
+        *type = INT;
+        memcpy(m->head->val, value, sizeof(int));
+        memcpy(m->head->type, type, sizeof(enum TYPE));
+        
+        mtll_post_view(list_idx, head);
+
+        free(value);
+        free(type);
+        free(m_len);
+        free(ret);
+        free(type);
+        return 1;
+    }
+
+
+    //Convert idx into a size_t for easy use
+    int* s_idx = calloc(1, sizeof(int));
+    *s_idx = atoi(idx);
+
+    //atoi will return 0 if cannot convert -> check that any 0's are valid
+    if (*s_idx == 0 && strcmp(idx, "0") != 0){
+        free(s_idx);
+        free(m_len);
+        free(ret);
+        free(type);
+        return 0;
+    }
+
+    //must be in range [-m_len-1:m_len]
+    if (!(
+        (*s_idx) >= (-1 * (*m_len)) && 
+        (*s_idx) <= ((*m_len) - 1)
+    )){
+        free(s_idx);
+        free(m_len);
+        free(ret);
+        free(type);
+        return 0;
+    }
+
+    //if idx is negative -> delete from s_idx + m_len slot
+    if (*s_idx < 0){
+        *s_idx += *m_len;
+    }
+
+
+    //actually delete from list now
+    // printf("Inserting %s into index:%d\n", val, *s_idx);
+
+    int* pos = calloc(1, sizeof(int));
+    struct node* cursor;
+
+    //were deleting the head
+    if (*s_idx == 0){
+        cursor = m->head;
+        m->head = m->head->next;
+        node_free(cursor);
+    } else{
+        cursor = m->head;
+        while (*pos != *s_idx - 1){
+            cursor = cursor->next;
+            (*pos)++;
+        }
+        struct node* next = cursor->next;
+        cursor->next = next->next;
+        node_free(next);
     }
 
     mtll_post_view(list_idx, head);

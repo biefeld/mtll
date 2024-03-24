@@ -34,7 +34,7 @@ extern int mtll_remove(char* list_idx, struct mtll * head);
 
 extern int mtll_insert(char* list_idx, char* idx, char* val, struct mtll* head);
 
-extern void mtll_delete();
+extern int mtll_delete(char* list_idx, char* idx, struct mtll* head);
 
 extern void mtll_append(struct mtll* head, struct mtll* new);
 

@@ -104,6 +104,10 @@ void node_free(struct node* n){
 
 
 void node_val(struct node * n, char * ret){
+    if (*n->type == INT && *(int*)n->val == -1){
+        return;
+    }
+
     switch (*n->type)
     {
     case INT:
@@ -126,6 +130,10 @@ void node_val(struct node * n, char * ret){
 
 //Must free the returned char after
 void node_type(struct node * n, char * ret){
+    if (*n->type == INT && *(int*)n->val == -1){
+        return;
+    }
+    
     switch (*n->type)
     {
     case INT:
