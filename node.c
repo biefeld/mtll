@@ -119,7 +119,7 @@ void node_val(struct node * n, char * ret){
         strcpy(ret, n->val);
         break;
     case REFERENCE:
-        strcpy(ret, "placeholder");
+        strcpy(ret, "{placeholder}");
         break;
     }
 }

@@ -63,7 +63,7 @@ struct mtll *mtll_create(size_t * num_nodes, size_t* next_index, void** values, 
     // m->head = NULL;
     m->next = NULL;
     m->index = *next_index;
-    m->has_nested = 0;
+    m->is_nested = 0;
     m->num_references = 0;
 
     return m;
@@ -83,18 +83,73 @@ void mtll_free(struct mtll * m){
 }
 
 
-void mtll_remove(struct mtll * head, size_t n){
-    struct mtll* curr = head;
-    while (curr != NULL){
-        if (curr->index == n){
-            ; //remove here
-            break;
-        }
-        curr = curr->next;
+int mtll_remove(char* list_idx, struct mtll * head){
+    struct mtll* m = mtll_valid_idx(list_idx, head);
+    if (m == NULL){
+        return 0;
     }
+
+    // printf("REMOVE %ld INDEX\n", m->index);
+
+    struct mtll* prev = NULL;
+    struct mtll* cursor = head;
+
+    //special case - we remove the head
+    if (head->index == m->index){
+        
+        //clear head and set idx = -1
+        if (head->next == NULL){
+            //Clear nodes in the linked list
+            struct node* cursor = m->head;
+            struct node* next;
+            while (cursor != NULL){
+                next = cursor->next;
+                node_free(cursor);
+                cursor = next;
+            }
+            
+            //set head to sentinel value
+            head->index = -1;
+            printf("List %s has been removed\n\n", list_idx);
+            mtll_view_all(head);
+            return 1;
+        }
+
+        //otherwise, shift head up 1 and clear old head
+
+        printf("THIS REMOVE IS NOT WORKING\n");
+        return 1;
+    }
+
+    prev = cursor;
+    cursor = cursor->next;
+
+    while(cursor != NULL){
+        if (cursor->index == m->index){
+            prev->next = cursor->next;
+            mtll_free(cursor);
+            printf("List %s has been removed\n\n", list_idx);
+            mtll_view_all(head);
+            return 1;
+        }
+        prev = cursor;
+        cursor = cursor->next;
+    }
+
+    return 0;
 }
 
 
+
+void mtll_post_view(char* list_idx, struct mtll * head){
+    struct mtll* m = mtll_valid_idx(list_idx, head);
+    if (m->is_nested){
+        printf("Nested %ld: ", m->index);
+    }else{
+        printf("List %ld: ", m->index);
+    }
+    mtll_view(list_idx, head);
+}
 
 int mtll_view(char* list_idx, struct mtll * head){
     struct mtll* m = mtll_valid_idx(list_idx, head);
@@ -103,7 +158,7 @@ int mtll_view(char* list_idx, struct mtll * head){
     }
 
     struct node* curr = m->head;
-    char* val = calloc(sizeof(char), 40);
+    char* val = calloc(40, sizeof(char));
 
     while (curr->next != NULL){
         node_val(curr, val);
@@ -124,7 +179,7 @@ int mtll_type(char* list_idx, struct mtll * head){
         return 0;
     }
     struct node* curr = m->head;
-    char* val = calloc(sizeof(char), 40);
+    char* val = calloc(40, sizeof(char));
 
     while (curr->next != NULL){
         node_type(curr, val);
@@ -140,24 +195,40 @@ int mtll_type(char* list_idx, struct mtll * head){
 }
 
 void mtll_view_all(struct mtll * head){
+    if (head->index == -1){
+        printf("Number of lists: 0\n");
+        return;
+    }
+
+
     struct mtll* curr = head;
-    int* num = calloc(sizeof(int), 1);
+    int* num = calloc(1, sizeof(int));
+
     while (curr != NULL){
         (*num)++;
         curr = curr->next;
     }
+
     printf("Number of lists: %d\n", *num);
+
     curr = head;
+
     while (curr != NULL){
-        printf("List %ld\n", curr->index);
+        if (curr->is_nested){
+            printf("Nested %ld\n", curr->index);
+        }else{
+            printf("List %ld\n", curr->index);
+        }
         curr = curr->next;
     }
+
     free(num);
 }
 
 
 
 void mtll_append(struct mtll* head, struct mtll* new){
+    //printf("HEADINDEX%ld\n", head->index);
     if (head->index == -1){
         // printf("Adding new head\n");
         // head = new;
@@ -167,7 +238,10 @@ void mtll_append(struct mtll* head, struct mtll* new){
         while (cursor->next != NULL){
             cursor = cursor->next;
         }
-        cursor->next = new;
+        struct mtll* next_new = malloc(sizeof(struct mtll));
+        cursor->next = next_new;
+        memcpy(next_new, new, sizeof(struct mtll));
+        // cursor->next = new;
     }
 }
 
@@ -176,7 +250,7 @@ void mtll_free_all(struct mtll* head){
     struct mtll* cursor = head;
     struct mtll* next;
     while(cursor != NULL){
-        // printf("Freeing: %ld\n", cursor->index);
+        printf("Freeing: %ld\n", cursor->index);
         next = cursor->next;
         mtll_free(cursor);
         cursor = next;
@@ -186,6 +260,14 @@ void mtll_free_all(struct mtll* head){
 
 
 struct mtll* mtll_valid_idx(char* idx, struct mtll* head){
+    if (head->index == -1){
+        return NULL;
+    }
+    for (size_t i = 0; i < strlen(idx); i++){
+        if (!isdigit(idx[i])){
+            return NULL;
+        }
+    }
     struct mtll* cursor = head;
     while(cursor != NULL){
         if (cursor->index == atoi(idx)){
@@ -195,4 +277,72 @@ struct mtll* mtll_valid_idx(char* idx, struct mtll* head){
     }
     return NULL;
 
+}
+
+void mtll_length(struct mtll* m, size_t* m_len){
+    struct node* cursor = m->head;
+    while (cursor != NULL){
+        m_len++;
+        cursor = cursor->next;
+    }
+}
+
+
+int mtll_insert(char* list_idx, char* idx, char* val, struct mtll* head){
+    
+    //get the list we need to insert into using valid_list_idx
+    struct mtll* m = mtll_valid_idx(list_idx, head);
+    if (m == NULL){
+        return 0;
+    }
+
+    printf("LIST BEFORE:");
+    mtll_view(list_idx, head);
+    
+
+    void* ret = calloc(128, sizeof(void));
+    enum TYPE* type = calloc(1, sizeof(enum TYPE));
+
+    //validate the value
+    if (!valid_value(val, ret, type)){
+        free(ret);
+        free(type);
+        return 0;
+    }
+
+    size_t* m_len = calloc(1, sizeof(size_t));
+
+    //validate the node_idx -> |idx| - 1 <= length
+    mtll_length(m, m_len);
+
+
+    size_t* s_idx = calloc(1, sizeof(size_t));
+    if (!snprintf(idx, 128, "%zu", *s_idx)){
+        free(s_idx);
+        free(m_len);
+        free(ret);
+        free(type);
+        return 0;
+    }
+
+    //if idx is within the range of the list
+    if (abs(*s_idx) - 1 <= *m_len){
+        free(s_idx);
+        free(m_len);
+        free(ret);
+        free(type);
+        return 0;
+    }
+
+    printf("Inserting %s into index:%ld\n", val, *s_idx);
+
+
+    //insert so that the value takes the spot of idx
+    //if idx is negative -> insert into idx + size(list) + 1 slot
+
+    free(s_idx);
+    free(m_len);
+    free(ret);
+    free(type);
+    return 1;
 }

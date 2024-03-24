@@ -5,7 +5,7 @@
 #include <string.h>
 #include <stdio.h>
 
-enum TYPE {INT, FLOAT, CHAR, STRING, REFERENCE};
+#include "type.h"
 
 struct node {
     void* val; //Pointer to the value which the node stores
@@ -24,7 +24,5 @@ extern void node_val(struct node * n, char * ret);
 
 //Must free the returned char after
 extern void node_type(struct node * n, char * ret);
-
-
 
 #endif

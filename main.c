@@ -45,14 +45,15 @@ int main(int argc, char** argv) {
     //call_command will call the function associated with the command parsed
 
     while(fgets(buffer, BUFFER, stdin) != NULL){
-        printf("%s\n", buffer);
-        // if (parse_input(buffer, command, args, num_args)){
-        //     // debug_output(buffer, command, args, num_args, next_list_idx);
+        if (parse_input(buffer, command, args, num_args)){
+            // debug_output(buffer, command, args, num_args, next_list_idx);
 
-        //     if (!call_command(command, args, num_args, mtll_head, next_list_idx)){
-        //         printf("INVALID COMMAND: %s\n", command);
-        //     }
-        // }
+            if (!call_command(command, args, num_args, mtll_head, next_list_idx)){
+                printf("INVALID COMMAND: %s\n", command);
+            }
+        }
+        // printf("HEAD INDEX ATFER %s: %ld\n", command, mtll_head->index);
+        // printf("POINTER AFTER %p\n", mtll_head);
     }
 
     //Free remaining mtll's, node's and value's
