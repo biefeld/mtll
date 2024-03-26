@@ -159,7 +159,7 @@ int mtll_view_nested(char* list_idx, struct mtll** head_ptr){
         sprintf(idx, "%ld", (*(struct mtll**)(curr->val))->index);
         printf("{");
         mtll_view(idx, head_ptr, 1);
-        printf("}");
+        printf("}\n");
     }else{
         node_val(curr, val);
         printf("%s\n", val);
