@@ -20,6 +20,8 @@ extern int mtll_view(char* list_idx, struct mtll** head_ptr);
 
 extern void mtll_view_all(struct mtll** head_ptr);
 
+extern int mtll_view_nested(char* list_idx, struct mtll** head_ptr);
+
 extern int mtll_type(char* list_idx, struct mtll** head_ptr);
 
 extern int mtll_remove(char* list_idx, struct mtll** head_ptr);

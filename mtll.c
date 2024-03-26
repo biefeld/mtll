@@ -125,6 +125,45 @@ void mtll_view_all(struct mtll** head_ptr){
     free(num);
 }
 
+int mtll_view_nested(char* list_idx, struct mtll** head_ptr){
+    if ((*head_ptr)->index == -1){
+        return 0;
+    }
+    struct mtll* m = mtll_valid_idx(list_idx, *head_ptr);
+    if (m == NULL){
+        return 0;
+    }
+
+    struct node* curr = m->head;
+    char* val = calloc(BUFFER, sizeof(char));
+
+    while (curr->next != NULL){
+        printf("type=%d\n", *curr->type);
+        if (*curr->type == REFERENCE){
+            printf("{");
+            printf("placeholder for %ld", (*(struct mtll**)(curr->val))->index);
+            // mtll_view((char*)(, head_ptr);
+            printf("} -> ");
+        }else{
+            node_val(curr, val);
+            printf("%s -> ", val);
+        }
+        curr = curr->next;
+    }
+
+    if (*curr->type == REFERENCE){
+        printf("{");
+        printf("placeholder for %ld", (*(struct mtll**)(curr->val))->index);
+        printf("}");
+    }else{
+        node_val(curr, val);
+        printf("%s\n", val);
+    }    
+    free(val);
+    return 1;
+}
+
+
 int mtll_type(char* list_idx, struct mtll** head_ptr){
     struct mtll* m = mtll_valid_idx(list_idx, *head_ptr);
     if (m == NULL){

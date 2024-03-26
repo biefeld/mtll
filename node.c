@@ -84,13 +84,7 @@ void node_val(struct node * n, char * ret){
         break;
     case REFERENCE:
         //should be {List <idx>} where <idx> = *(struct mtll**)(n->val))->index
-        char* t = calloc(BUFFER, sizeof(char));
-        *t = (int)(*(struct mtll**)(n->val))->index;
-        *t += '0';
-        strncpy(ret, "{List ", 7); //dereference and cast to (struct node*) might be the way to go
-        strncpy(ret + 6, t, 2);
-        strncpy(ret + 7, "}", 2);
-        free(t);
+        printf("{List %ld}", (*(struct mtll**)(n->val))->index);
         break;
     
     default:

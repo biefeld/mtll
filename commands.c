@@ -121,9 +121,7 @@ int delete(char* list_idx, char* idx, struct mtll** mtll_head_ptr){
 }
 
 int view_nested(char* list_idx, struct mtll** mtll_head_ptr){
-    //just use view() but with a flag?
-    printf("Displaying elements nested\n");
-    return 1;
+    return mtll_view_nested(list_idx, mtll_head_ptr);
 }
 
 //============================================================================//
