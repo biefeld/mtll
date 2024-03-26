@@ -1,5 +1,5 @@
 CC=gcc
-FLAGS=-g -O2 -Wall -Werror -Wno-unused-result -std=c99
+FLAGS=-g -O2 -Wall -Werror -pedantic -Wno-unused-result -std=c99
 OBJS=mtll.o commands.o input_parser.o node.o main.o
 TARGET=mtll
 TEST_SCRIPT=test.sh

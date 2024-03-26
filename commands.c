@@ -29,7 +29,7 @@ int new(char* n, size_t* next_list_idx, struct mtll** mtll_head_ptr){
     //allocate space which each TYPE* points to
     for (size_t i = 0; i < *num_nodes; i++){
         types[i] = calloc(1, sizeof(enum TYPE));
-        values[i] = calloc(1, sizeof(void));
+        values[i] = calloc(1, sizeof(char));
     }
 
 
@@ -51,6 +51,7 @@ int new(char* n, size_t* next_list_idx, struct mtll** mtll_head_ptr){
         return 1;
     }
 
+    //0 indicates valid values were not parsed
     if (*ret == 0){
         free(ret);
         free(num_nodes);
@@ -73,10 +74,10 @@ int new(char* n, size_t* next_list_idx, struct mtll** mtll_head_ptr){
     //insert new mtll into mtll_list
     mtll_append(mtll_head_ptr, new);
 
-    char* list_idx = calloc(128, sizeof(char)); //change to BUFFER
+    char* list_idx = calloc(BUFFER, sizeof(char));
 
     //convert size_t into char*
-    snprintf(list_idx, 128, "%zu", *next_list_idx);
+    snprintf(list_idx, BUFFER, "%zu", *next_list_idx);
     mtll_post_view(list_idx, mtll_head_ptr);
 
     free(new);

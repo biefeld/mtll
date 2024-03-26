@@ -269,7 +269,7 @@ int mtll_insert(char* list_idx, char* idx, char* val, struct mtll** head_ptr){
         return 0;
     }
 
-    void* ret = calloc(128, sizeof(void));
+    void* ret = calloc(BUFFER, sizeof(char));
     enum TYPE* type = calloc(1, sizeof(enum TYPE));
 
     //validate the value
@@ -328,7 +328,7 @@ int mtll_insert(char* list_idx, char* idx, char* val, struct mtll** head_ptr){
         case STRING:
             m->head->val = realloc(m->head->val, strlen(ret) + 1);
             strcpy((void*)m->head->val, ret);
-            char* x = m->head->val + strcspn(m->head->val, "\n");
+            char* x = (char*)m->head->val + strcspn(m->head->val, "\n");
             memcpy(x, "\0", 1); //Hacky way to trim trailing \n 
             break;
         case REFERENCE:
@@ -421,7 +421,7 @@ int mtll_delete(char* list_idx, char* idx, struct mtll** head_ptr){
         return 0;
     }
 
-    void* ret = calloc(128, sizeof(void));
+    void* ret = calloc(BUFFER, sizeof(char));
     enum TYPE* type = calloc(1, sizeof(enum TYPE));
 
     //Get the length of the mtll

@@ -198,7 +198,7 @@ int parse_values(size_t* num_vals, void** values, enum TYPE** types
 
 
     //this will be sloted into values
-    void* val_read = calloc(BUFFER, sizeof(void));
+    void* val_read = calloc(BUFFER, sizeof(char));
 
     //this will be memcpy'd into types
     enum TYPE* type_read = calloc(1, sizeof(enum TYPE));

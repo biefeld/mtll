@@ -1,0 +1,50 @@
+List 0: {placeholder}
+INVALID COMMAND: VIEW
+{placeholder}
+Number of lists: 1
+List 0
+INVALID COMMAND: VIEW
+INVALID COMMAND: VIEW
+INVALID COMMAND: INSERT
+INVALID COMMAND: INPUT
+INVALID COMMAND: INPUT
+INVALID COMMAND: INPUT
+INVALID COMMAND: INPUT
+INVALID COMMAND: TYPE
+reference
+List 0: 
+Number of lists: 1
+List 0
+
+Displaying elements nested
+List 0 has been removed.
+
+Number of lists: 0
+Number of lists: 0
+INVALID COMMAND: VIEW
+INVALID COMMAND: VIEW
+List 1: fdkfdjfas -> 1 -> 200.00
+Number of lists: 1
+List 1
+INVALID COMMAND: TYPE
+string -> int -> float
+INVALID COMMAND: TYPE
+INVALID COMMAND: TYPE
+INVALID COMMAND: INSERT
+INVALID COMMAND: INSERT
+List 1: fdkfdjfas -> 1 -> 200.00 -> fdfajfasd
+Number of lists: 1
+List 1
+fdkfdjfas -> 1 -> 200.00 -> fdfajfasd
+INVALID COMMAND: REMOVE
+INVALID COMMAND: DELETE
+List 1: 1 -> 200.00 -> fdfajfasd
+List 1: 1 -> fdfajfasd
+List 1 has been removed.
+
+Number of lists: 0
+INVALID COMMAND: VIEW
+INVALID COMMAND: VIEW
+Number of lists: 0
+INVALID COMMAND: TYPE
+INVALID COMMAND: TYPE

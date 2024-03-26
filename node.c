@@ -36,12 +36,11 @@ struct node *node_create(void* value, enum TYPE* type){
     case STRING:
         n->val = realloc(n->val, strlen(value) + 1);
         strcpy((void*)n->val, value);
-        char* x = n->val + strcspn(value, "\n");
-        memcpy(x, "\0", 1); //Hacky way to trim trailing \n 
+        char* x = (char*)n->val + strcspn(value, "\n");
+        memcpy(x, "\0", 1); //Way to trim trailing \n 
         break;
 
     case REFERENCE:
-        // printf("values:%p\n", *(struct mtll**)value);
         n->val = realloc(n->val, sizeof(struct mtll*));
         memcpy(n->val, value, sizeof(struct mtll*));
         break;
@@ -63,6 +62,7 @@ void node_free(struct node* n){
     return;
 }
 
+//Populates ret with node n's value
 void node_val(struct node * n, char * ret){
     if (*n->type == NaT){
         return;
@@ -93,6 +93,7 @@ void node_val(struct node * n, char * ret){
     }
 }
 
+//Populates ret with node n's type
 void node_type(struct node * n, char * ret){
     if (*n->type == NaT){
         return;
