@@ -1,7 +1,7 @@
 #include "mtll.h"
 
 struct mtll *mtll_create(size_t * num_nodes, size_t* next_index, void** values, enum TYPE ** types){
-    struct mtll* m = malloc(sizeof(struct mtll));
+    struct mtll* m = calloc(1, sizeof(struct mtll));
     if (m == NULL){
         return NULL;
     }
@@ -9,7 +9,6 @@ struct mtll *mtll_create(size_t * num_nodes, size_t* next_index, void** values, 
     m->next = NULL;
     m->index = *next_index;
     m->num_nested = 0;
-    m->num_references = 0;
 
     //create an empty list - head node has sentinel value as value
     if (*num_nodes == 0){
@@ -23,7 +22,7 @@ struct mtll *mtll_create(size_t * num_nodes, size_t* next_index, void** values, 
         return m;
     }
 
-    if(*types[0] == REFERENCE && m->num_nested == 0){
+    if(*types[0] == REFERENCE){
         m->num_nested++;
     }
 
@@ -35,13 +34,15 @@ struct mtll *mtll_create(size_t * num_nodes, size_t* next_index, void** values, 
 
 
     for (size_t i = 1; i < *num_nodes; i++){
-        if(*types[i] == REFERENCE && m->num_nested == 0){
+        if(*types[i] == REFERENCE){
             m->num_nested++;
         }
 
         curr->next = node_create(values[i], types[i]);
         curr = curr->next;
     }
+    m->num_references = 0;
+
             
     return m;
 }
@@ -197,6 +198,7 @@ int mtll_remove(char* list_idx, struct mtll** head_ptr){
         return 0;
     }
 
+
     if(m->num_references != 0){
         return 0;
     }
@@ -229,6 +231,17 @@ int mtll_remove(char* list_idx, struct mtll** head_ptr){
 
     prev = cursor;
     cursor = cursor->next;
+
+    //evauluate if each node is a reference
+    //if it is none->val->num_references--
+
+    struct node* node_cursor = m->head;
+    while(node_cursor != NULL){
+        if (*node_cursor->type == REFERENCE){
+            (*(struct mtll**)(node_cursor->val))->num_references--;
+        }
+        node_cursor = node_cursor->next;
+    }
 
     while(cursor != NULL){
         if (cursor->index == m->index){
@@ -266,6 +279,17 @@ int mtll_insert(char* list_idx, char* idx, char* val, struct mtll** head_ptr){
         free(type);
         return 0;
     }
+
+    // printf("NUMREF:%d NUMNEST:%d for idx%ld\n", m->num_references, m->num_references, m->index);
+
+
+
+    // if (*type == REFERENCE){
+    //     printf("NUMREF:%d NUMNEST:%d for idx%ld\n", m->num_references, m->num_references, m->index);
+    //     if (m->num_references != 0){
+    //         return 0;
+    //     }
+    // }
 
     //Get the length of the mtll
     int* m_len = calloc(1, sizeof(int));
@@ -367,6 +391,10 @@ int mtll_insert(char* list_idx, char* idx, char* val, struct mtll** head_ptr){
     }
 
     if (*type == REFERENCE){
+        // struct mtll* m = mtll_valid_idx(list_idx, *head_ptr);
+        // if (m->num_references != 0){
+        //     return 0;
+        // }
         m->num_nested++;
         char* idx = calloc(strcspn(val, "}"), sizeof(char));
         memcpy(idx, val + 1, strcspn(val, "}") - 1);
