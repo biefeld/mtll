@@ -393,6 +393,9 @@ int mtll_delete(char* list_idx, char* idx, struct mtll** head_ptr){
 
     //we are deleting the only node in the list
     if (*m_len == 1){
+        if (*m->head->type == REFERENCE){
+            m->num_references--;
+        }
         int* value = malloc(sizeof(int));
         *value = -1;
         enum TYPE* type = malloc(sizeof(enum TYPE));
@@ -447,6 +450,9 @@ int mtll_delete(char* list_idx, char* idx, struct mtll** head_ptr){
 
     //were deleting the head
     if (*s_idx == 0){
+        if (*m->head->type == REFERENCE){
+            m->num_references--;
+        }
         cursor = m->head;
         m->head = m->head->next;
         node_free(cursor);
@@ -455,6 +461,9 @@ int mtll_delete(char* list_idx, char* idx, struct mtll** head_ptr){
         while (*pos != *s_idx - 1){
             cursor = cursor->next;
             (*pos)++;
+        }
+        if (*cursor->type == REFERENCE){
+            m->num_references--;
         }
         struct node* next = cursor->next;
         cursor->next = next->next;
