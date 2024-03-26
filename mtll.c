@@ -69,7 +69,7 @@ void mtll_free_all(struct mtll* head){
     // mtll_free(cursor);
 }
 
-int mtll_view(char* list_idx, struct mtll** head_ptr){
+int mtll_view(char* list_idx, struct mtll** head_ptr, int nested){
     if ((*head_ptr)->index == -1){
         return 0;
     }
@@ -88,8 +88,12 @@ int mtll_view(char* list_idx, struct mtll** head_ptr){
     }
 
     node_val(curr, val);
-    printf("%s\n", val);
-    
+    if(nested){
+        printf("%s", val); 
+    }else{
+        printf("%s\n", val);
+    }
+
     free(val);
     return 1;
 }
@@ -136,13 +140,13 @@ int mtll_view_nested(char* list_idx, struct mtll** head_ptr){
 
     struct node* curr = m->head;
     char* val = calloc(BUFFER, sizeof(char));
+    char* idx = calloc(BUFFER, sizeof(char));
 
     while (curr->next != NULL){
-        printf("type=%d\n", *curr->type);
         if (*curr->type == REFERENCE){
+            sprintf(idx, "%ld", (*(struct mtll**)(curr->val))->index);
             printf("{");
-            printf("placeholder for %ld", (*(struct mtll**)(curr->val))->index);
-            // mtll_view((char*)(, head_ptr);
+            mtll_view(idx, head_ptr, 1);
             printf("} -> ");
         }else{
             node_val(curr, val);
@@ -152,14 +156,16 @@ int mtll_view_nested(char* list_idx, struct mtll** head_ptr){
     }
 
     if (*curr->type == REFERENCE){
+        sprintf(idx, "%ld", (*(struct mtll**)(curr->val))->index);
         printf("{");
-        printf("placeholder for %ld", (*(struct mtll**)(curr->val))->index);
+        mtll_view(idx, head_ptr, 1);
         printf("}");
     }else{
         node_val(curr, val);
         printf("%s\n", val);
     }    
     free(val);
+    free(idx);
     return 1;
 }
 
@@ -472,7 +478,7 @@ void mtll_post_view(char* list_idx, struct mtll** head_ptr){
     }else{
         printf("List %ld: ", m->index);
     }
-    mtll_view(list_idx, head_ptr);
+    mtll_view(list_idx, head_ptr, 0);
 }
 
 void mtll_append(struct mtll** head_ptr, struct mtll* new){

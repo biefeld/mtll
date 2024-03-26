@@ -16,7 +16,7 @@ extern void mtll_free_all(struct mtll* head);
 
 
 //Commands
-extern int mtll_view(char* list_idx, struct mtll** head_ptr);
+extern int mtll_view(char* list_idx, struct mtll** head_ptr,  int nested);
 
 extern void mtll_view_all(struct mtll** head_ptr);
 

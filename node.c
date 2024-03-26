@@ -84,7 +84,8 @@ void node_val(struct node * n, char * ret){
         break;
     case REFERENCE:
         //should be {List <idx>} where <idx> = *(struct mtll**)(n->val))->index
-        printf("{List %ld}", (*(struct mtll**)(n->val))->index);
+        printf("{List %ld", (*(struct mtll**)(n->val))->index);
+        strcpy(ret, "}");
         break;
     
     default:

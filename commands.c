@@ -105,7 +105,7 @@ int view(char* list_idx, struct mtll** mtll_head_ptr){
         return 1;
     }
     
-    return mtll_view(list_idx, mtll_head_ptr);
+    return mtll_view(list_idx, mtll_head_ptr, 0);
 }
 
 int rmv(char* list_idx, struct mtll** mtll_head_ptr){
