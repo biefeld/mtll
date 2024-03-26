@@ -394,7 +394,12 @@ int mtll_delete(char* list_idx, char* idx, struct mtll** head_ptr){
     //we are deleting the only node in the list
     if (*m_len == 1){
         if (*m->head->type == REFERENCE){
-            m->num_references--;
+            m->num_nested--;
+            char* ref_idx = calloc(BUFFER, sizeof(char));
+            sprintf(ref_idx, "%ld", (*(struct mtll**)(m->head->val))->index);
+            struct mtll* ref = mtll_valid_idx(ref_idx, *head_ptr);
+            (ref->num_references)--;
+            free(ref_idx);
         }
         int* value = malloc(sizeof(int));
         *value = -1;
@@ -451,7 +456,13 @@ int mtll_delete(char* list_idx, char* idx, struct mtll** head_ptr){
     //were deleting the head
     if (*s_idx == 0){
         if (*m->head->type == REFERENCE){
-            m->num_references--;
+            m->num_nested--;
+            
+            char* ref_idx = calloc(BUFFER, sizeof(char));
+            sprintf(ref_idx, "%ld", (*(struct mtll**)(m->head->val))->index);
+            struct mtll* ref = mtll_valid_idx(ref_idx, *head_ptr);
+            (ref->num_references)--;
+            free(ref_idx);
         }
         cursor = m->head;
         m->head = m->head->next;
@@ -462,8 +473,13 @@ int mtll_delete(char* list_idx, char* idx, struct mtll** head_ptr){
             cursor = cursor->next;
             (*pos)++;
         }
-        if (*cursor->type == REFERENCE){
-            m->num_references--;
+        if (*cursor->next->type == REFERENCE){
+            m->num_nested--;
+            char* ref_idx = calloc(BUFFER, sizeof(char));
+            sprintf(ref_idx, "%ld", (*(struct mtll**)(cursor->next->val))->index);
+            struct mtll* ref = mtll_valid_idx(ref_idx, *head_ptr);
+            (ref->num_references)--;
+            free(ref_idx);
         }
         struct node* next = cursor->next;
         cursor->next = next->next;
@@ -482,7 +498,7 @@ int mtll_delete(char* list_idx, char* idx, struct mtll** head_ptr){
 
 void mtll_post_view(char* list_idx, struct mtll** head_ptr){
     struct mtll* m = mtll_valid_idx(list_idx, *head_ptr);
-    if (m->num_nested){
+    if (m->num_nested != 0){
         printf("Nested %ld: ", m->index);
     }else{
         printf("List %ld: ", m->index);
