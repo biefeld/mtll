@@ -8,7 +8,7 @@ struct mtll *mtll_create(size_t * num_nodes, size_t* next_index, void** values, 
 
     m->next = NULL;
     m->index = *next_index;
-    m->is_nested = 0;
+    m->num_nested = 0;
     m->num_references = 0;
 
     //create an empty list - head node has sentinel value as value
@@ -23,13 +23,26 @@ struct mtll *mtll_create(size_t * num_nodes, size_t* next_index, void** values, 
         return m;
     }
 
+    if(*types[0] == REFERENCE && m->num_nested == 0){
+        m->num_nested++;
+    }
+
+    // printf("Values[0]:%p\n", *(struct mtll**)values[0]);
+
     m->head = node_create(values[0], types[0]);
+
     struct node* curr = m->head;
 
+
     for (size_t i = 1; i < *num_nodes; i++){
+        if(*types[i] == REFERENCE && m->num_nested == 0){
+            m->num_nested++;
+        }
+
         curr->next = node_create(values[i], types[i]);
         curr = curr->next;
     }
+            
     return m;
 }
 
@@ -101,7 +114,7 @@ void mtll_view_all(struct mtll** head_ptr){
     curr = (*head_ptr);
 
     while (curr != NULL){
-        if (curr->is_nested){
+        if (curr->num_nested != 0){
             printf("Nested %ld\n", curr->index);
         }else{
             printf("List %ld\n", curr->index);
@@ -139,7 +152,9 @@ int mtll_remove(char* list_idx, struct mtll** head_ptr){
         return 0;
     }
 
-    // printf("REMOVE %ld INDEX\n", m->index);
+    if(m->num_references != 0){
+        return 0;
+    }
 
     struct mtll* prev = NULL;
     struct mtll* cursor = (*head_ptr);
@@ -152,17 +167,6 @@ int mtll_remove(char* list_idx, struct mtll** head_ptr){
             mtll_free(m);
             *head_ptr = calloc(1, sizeof(struct mtll));
             (*head_ptr)->index = -1;
-            // //Clear nodes in the linked list
-            // struct node* cursor = (*head_ptr)->head;
-            // struct node* next;
-            // while (cursor != NULL){
-            //     next = cursor->next;
-            //     node_free(cursor);
-            //     cursor = next;
-            // }
-            
-            // //set head to sentinel value
-            // (*head_ptr)->index = -1;
             printf("List %s has been removed.\n\n", list_idx);
             mtll_view_all(head_ptr);
             return 1;
@@ -175,7 +179,6 @@ int mtll_remove(char* list_idx, struct mtll** head_ptr){
         printf("List %s has been removed.\n\n", list_idx);
         mtll_view_all(head_ptr);
 
-        // printf("THIS REMOVE IS NOT WORKING\n");
         return 1;
     }
 
@@ -213,7 +216,7 @@ int mtll_insert(char* list_idx, char* idx, char* val, struct mtll** head_ptr){
     enum TYPE* type = calloc(1, sizeof(enum TYPE));
 
     //validate the value
-    if (!valid_value(val, ret, type)){
+    if (!valid_value(val, ret, type, head_ptr, list_idx)){
         free(ret);
         free(type);
         return 0;
@@ -227,25 +230,7 @@ int mtll_insert(char* list_idx, char* idx, char* val, struct mtll** head_ptr){
     //Convert idx into a size_t for easy use
     int* s_idx = calloc(1, sizeof(int));
   
-    // if (!isdigit(idx[0]) && idx[0] != '-' && idx[0] != '+'){
-    //     free(s_idx);
-    //     free(m_len);
-    //     free(ret);
-    //     free(type);
-    //     return 0;
-    // }
-    // for (size_t i = 1; i < strlen(idx); i++){
-    //     if (!isdigit(idx[i])){
-    //         free(s_idx);
-    //         free(m_len);
-    //         free(ret);
-    //         free(type);
-    //         return 0;
-    //     }
-    // }
     sscanf(idx, "%d", s_idx);
-    // printf("idx:%s, s_idx:%d\n", idx, *s_idx);
-    // *s_idx = atoi(idx);
 
     //atoi will return 0 if cannot convert -> check that any 0's are valid
     if (*s_idx == 0 && strcmp(idx, "0") != 0){
@@ -276,8 +261,6 @@ int mtll_insert(char* list_idx, char* idx, char* val, struct mtll** head_ptr){
             break;
 
         case STRING:
-            // printf("VALUE TO INSERT:|%s|\n", (char*)ret);
-            //may be of use: strcspn(val_read, "\n")
             m->head->val = realloc(m->head->val, strlen(ret) + 1);
             strcpy((void*)m->head->val, ret);
             char* x = m->head->val + strcspn(m->head->val, "\n");
@@ -294,10 +277,6 @@ int mtll_insert(char* list_idx, char* idx, char* val, struct mtll** head_ptr){
         free(type);
         return 1;
     }
-
-    // printf("%d|%d -> %d\n", *s_idx, *m_len, ;
-
-    // printf("[%d:%d]\n", ((*m_len)*-1)-1, (*m_len));
 
     //must be in range [-m_len-2:m_len+1]
     if (!(
@@ -318,8 +297,6 @@ int mtll_insert(char* list_idx, char* idx, char* val, struct mtll** head_ptr){
 
 
     //actually insert into list now
-    // printf("Inserting %s into index:%d\n", val, *s_idx);
-
     struct node* new = node_create(ret, type);
     int* pos = calloc(1, sizeof(int));
     struct node* cursor;
@@ -369,8 +346,7 @@ int mtll_delete(char* list_idx, char* idx, struct mtll** head_ptr){
 
     mtll_length(m, m_len);
 
-    
-
+    //we are deleting the only node in the list
     if (*m_len == 1){
         int* value = malloc(sizeof(int));
         *value = -1;
@@ -421,8 +397,6 @@ int mtll_delete(char* list_idx, char* idx, struct mtll** head_ptr){
 
 
     //actually delete from list now
-    // printf("Inserting %s into index:%d\n", val, *s_idx);
-
     int* pos = calloc(1, sizeof(int));
     struct node* cursor;
 
@@ -454,7 +428,7 @@ int mtll_delete(char* list_idx, char* idx, struct mtll** head_ptr){
 
 void mtll_post_view(char* list_idx, struct mtll** head_ptr){
     struct mtll* m = mtll_valid_idx(list_idx, *head_ptr);
-    if (m->is_nested){
+    if (m->num_nested){
         printf("Nested %ld: ", m->index);
     }else{
         printf("List %ld: ", m->index);
@@ -463,10 +437,7 @@ void mtll_post_view(char* list_idx, struct mtll** head_ptr){
 }
 
 void mtll_append(struct mtll** head_ptr, struct mtll* new){
-    //printf("HEADINDEX%ld\n", head->index);
     if ((*head_ptr)->index == -1){
-        // printf("Adding new head\n");
-        // head = new;
         memcpy((*head_ptr), new, sizeof(struct mtll));
     }else{
         struct mtll* cursor = (*head_ptr);
@@ -476,7 +447,6 @@ void mtll_append(struct mtll** head_ptr, struct mtll* new){
         struct mtll* next_new = malloc(sizeof(struct mtll));
         cursor->next = next_new;
         memcpy(next_new, new, sizeof(struct mtll));
-        // cursor->next = new;
     }
 }
 

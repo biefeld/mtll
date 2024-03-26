@@ -36,7 +36,7 @@ int new(char* n, size_t* next_list_idx, struct mtll** mtll_head_ptr){
     //If the values we got were not value, return and free
     //parse_values will read, validate and populate (values, types)
     int* ret = calloc(1, sizeof(int));
-    *ret = parse_values(num_nodes, values, types);
+    *ret = parse_values(num_nodes, values, types, mtll_head_ptr);
 
     //-1 indicates EOF early
     if (*ret == -1){
@@ -133,7 +133,7 @@ int view_nested(char* list_idx, struct mtll** mtll_head_ptr){
 //Checks if we have the correct number of args for the command
 //Returns the result of the command function this calls
 int call_command(char* command, char** args, int* num_args, 
-                                struct mtll** mtll_head_ptr,  size_t* next_list_idx){
+                           struct mtll** mtll_head_ptr,  size_t* next_list_idx){
     
     if (strcmp(command, "NEW") == 0 && *num_args == 1){
         return new(args[0], next_list_idx, mtll_head_ptr);

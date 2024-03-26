@@ -1,9 +1,9 @@
 #include "input_parser.h"
 
 
-
 //return 1 if valid, 0 if not. Copy the parsed value into ret.
-int valid_value(char* value, void* ret, enum TYPE* type){
+int valid_value(char* value, void* ret, enum TYPE* type, 
+                                struct mtll** mtll_head_ptr, char* insert_idx){
 
     char* garbage = calloc(BUFFER, sizeof(char)); 
 
@@ -50,6 +50,10 @@ int valid_value(char* value, void* ret, enum TYPE* type){
         return 1;
     }
 
+    //way of fixing INSERT not copying over \n
+    if (strcspn(value, "\n") == strlen(value)){
+        memcpy(value+strlen(value), "\n", 1);
+    }
 
     //we do not begin and end with { and }
     if (*open_brace_idx != 0){
@@ -77,17 +81,65 @@ int valid_value(char* value, void* ret, enum TYPE* type){
     free(open_brace_idx);
     free(close_brace_idx);
 
-    //validate its a valid reference
 
-    //how do i want to save the value of the reference?
+    //Extract digits
+    char* idx = calloc(strcspn(value, "}"), sizeof(char));
+    memcpy(idx, value + 1, strcspn(value, "}") - 1);
 
-    //I will also have to tackle how REFERENCE is printed
+    //we are inserting list into itself
+    if(insert_idx != NULL){
+        if (strcmp(idx, insert_idx) == 0){
+            free(idx);
+            return 0;
+        }
+    }
+    
 
-    //when we get to the mtll_create function, we should check if any types are REFERENCES
+    struct mtll* m;
 
-    //if so, set the is_nested flag true, and referecnes++ for the referenced list
+    //This checks if ret is a currently available list index
+    if ((*mtll_head_ptr)->index == -1){
+        m = NULL;
+    }
+    for (size_t i = 0; i < strlen(idx); i++){
+        if (!isdigit(idx[i])){
+            m = NULL;
+        }
+    }
 
-    // memcpy(ret, value, strlen(value));
+    struct mtll* cursor = (*mtll_head_ptr);
+    while(cursor != NULL){
+        if (cursor->index == atoi(idx)){
+            m = cursor;
+            break;
+        }
+        cursor = cursor->next;
+    }
+
+    //If we could not find a valid reference
+    if (m == NULL){
+        free(idx);
+        return 0;
+    }
+
+    //If the nesting would create a nest too deep (m is already nested)
+    if (m->num_nested){
+        free(idx);
+        return 0;
+    }
+
+    //add 1 to how many times the mtll has been referenced
+    m->num_references++;
+
+    free(idx);
+
+
+    *(struct mtll**)ret = m;
+    //copy the address which stores the pointer to the mtll to ret
+    // memcpy(ret, &m, sizeof(struct mtll*));
+
+    // printf("MTll is at:%p\n", *(struct mtll**)ret);
+
     *type = REFERENCE;
 
     return 1;
@@ -112,16 +164,24 @@ void copy_val_type(enum TYPE** types, void** values, enum TYPE* type_read,
         break;
 
     case CHAR:
-        values[n] = realloc(values[n], strlen(val_read) + 1);
-        strcpy((void*)values[n], val_read);
-        // memcpy(values[n], val_read, sizeof(char));
-        break;
+        // values[n] = realloc(values[n], strlen(val_read) + 1);
+        // strcpy((void*)values[n], val_read);
+        // // memcpy(values[n], val_read, sizeof(char));
+        // break;
 
     case STRING:
         // printf("len:%ld. new_line:%ld\n", strlen(val_read),strcspn(val_read, "\n"));
         values[n] = realloc(values[n], strlen(val_read) + 1);
         // memcpy(values[n], val_read, strlen(val_read) - 1);
         strcpy((void*)values[n], val_read);
+        break;
+
+    case REFERENCE:
+        // printf("val_read:%p\n", *(struct mtll**)val_read);
+        values[n] = realloc(values[n], sizeof(struct mtll*));
+        *(struct mtll**)values[n] = *(struct mtll**)val_read;
+
+        // memcpy(values[n], val_read, sizeof(struct mtll*));
         break;
     
     default:
@@ -132,7 +192,8 @@ void copy_val_type(enum TYPE** types, void** values, enum TYPE* type_read,
 }
 
 
-int parse_values(size_t* num_vals, void** values, enum TYPE** types){
+int parse_values(size_t* num_vals, void** values, enum TYPE** types
+                                                , struct mtll** mtll_head_ptr){
     char* buff = calloc(BUFFER, sizeof(char)); 
 
 
@@ -152,9 +213,10 @@ int parse_values(size_t* num_vals, void** values, enum TYPE** types){
     //read num_vals values OR break if we recieve EOF
     while ((*num_read) != *(num_vals) && fgets(buff, BUFFER, stdin) != NULL){
         //set flag if we get an invalid value, but keep reading
-        if (!valid_value(buff, val_read, type_read)){
+        if (!valid_value(buff, val_read, type_read, mtll_head_ptr, NULL)){
             *valid = 0;
         }
+
 
         copy_val_type(types, values, type_read, val_read, *num_read);
 
@@ -247,6 +309,8 @@ int split_arguments(char* arguments, char** args, int* num_args){
 
     //We found a single space after the 1st arg, no good
     if (curs[0] == ' ' && *curs_len == 1){
+        free(space_idx);
+        free(curs_len);
         return 0;
     }
 
@@ -347,8 +411,8 @@ int parse_input(char* buffer, char* command, char** args, int* num_args){
     //Contains the remainder of the buffer, including the space after command
     //memcpy pads end with \0, so we allocate one more size than usual
     //len - space_idx - 2 to skip \n on the end -> no longer needed
-    char* arguments = calloc(sizeof(char), (strlen(buffer) - (*space_idx) -1));
-    memcpy(arguments, buffer+(*space_idx)+1, (strlen(buffer) - (*space_idx) - 2));
+    char* arguments = calloc(sizeof(char), (strlen(buffer) - (*space_idx)-1));
+    memcpy(arguments, buffer+(*space_idx)+1, (strlen(buffer) - (*space_idx)-2));
 
     //Ensure we have valid arguments for the command
     //Populates args, num_args with values

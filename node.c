@@ -1,49 +1,6 @@
 #include "node.h"
 
 
-
-// void node_check(){
-//     float* v = malloc(sizeof(void *));
-//     *v = 123.123;
-//     struct node* n = node_create(v, FLOAT);
-//     free(v);
-
-//     char* v2 = malloc(sizeof(void *));
-//     *v2 = 'L';
-//     struct node* n2 = node_create(v2, CHAR);
-//     free(v2);
-
-//     n->next = n2;
-
-//     //need seperate functions for printing
-//     printf("%f, %d, %p\n", *(float*)n->val, n->type, n->next);
-//     printf("%c, %d, %p\n", *(char*)n->next->val, n->next->type, n->next->next);
-//     printf("%c, %d, %p\n", *(char*)n2->val, n2->type, n2->next);
-    
-//     char * t = calloc(sizeof(char), 50);
-//     char * va = calloc(sizeof(char), 50);
-    
-//     node_type(n, t);
-//     node_val(n, va);
-//     printf("%s\n", t);
-//     printf("%s\n", va);
-
-//     node_type(n2, t);
-//     node_val(n2, va);
-//     printf("%s\n", t);
-//     printf("%s\n", va);
-
-//     free(t);
-//     free(va);
-
-//     node_free(n);
-//     node_free(n2);
-
-// }
-
-
-
-//change this to be able to take the next element?
 struct node *node_create(void* value, enum TYPE* type){
     struct node* n = malloc(sizeof(struct node));
     if (n == NULL){
@@ -59,7 +16,6 @@ struct node *node_create(void* value, enum TYPE* type){
         return NULL;
     }
 
-    //This needs to change depending on the size/type of the value
     switch (*type)
     {
     case INT:
@@ -83,13 +39,18 @@ struct node *node_create(void* value, enum TYPE* type){
         char* x = n->val + strcspn(value, "\n");
         memcpy(x, "\0", 1); //Hacky way to trim trailing \n 
         break;
+
+    case REFERENCE:
+        // printf("values:%p\n", *(struct mtll**)value);
+        n->val = realloc(n->val, sizeof(struct mtll*));
+        memcpy(n->val, value, sizeof(struct mtll*));
+        break;
     
     default:
         break;
     }
 
     memcpy(n->type, type, sizeof(enum TYPE));
-    //n->type = type; //maybe this has to be memcpy'd somehow
     n->next = NULL;
 
     return n;
@@ -101,7 +62,6 @@ void node_free(struct node* n){
     free(n);
     return;
 }
-
 
 void node_val(struct node * n, char * ret){
     if (*n->type == NaT){
@@ -123,7 +83,14 @@ void node_val(struct node * n, char * ret){
         strcpy(ret, n->val);
         break;
     case REFERENCE:
-        strcpy(ret, "{placeholder}");
+        //should be {List <idx>} where <idx> = *(struct mtll**)(n->val))->index
+        char* t = calloc(BUFFER, sizeof(char));
+        *t = (int)(*(struct mtll**)(n->val))->index;
+        *t += '0';
+        strncpy(ret, "{List ", 7); //dereference and cast to (struct node*) might be the way to go
+        strncpy(ret + 6, t, 2);
+        strncpy(ret + 7, "}", 2);
+        free(t);
         break;
     
     default:
@@ -131,7 +98,6 @@ void node_val(struct node * n, char * ret){
     }
 }
 
-//Must free the returned char after
 void node_type(struct node * n, char * ret){
     if (*n->type == NaT){
         return;
@@ -159,4 +125,3 @@ void node_type(struct node * n, char * ret){
         break;
     }
 }
-

@@ -34,4 +34,4 @@ clean:
 	rm -f $(TARGET)
 
 debug: $(TARGET)
-	valgrind --leak-check=full -s --show-leak-kinds=all ./$(TARGET)	
+	valgrind --leak-check=full -s --track-origins=yes --show-leak-kinds=all --error-exitcode=42 --exit-on-first-error=yes --errors-for-leak-kinds=all --track-fds=yes ./$(TARGET)	
