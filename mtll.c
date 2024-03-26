@@ -1,6 +1,7 @@
 #include "mtll.h"
 
-struct mtll *mtll_create(size_t * num_nodes, size_t* next_index, void** values, enum TYPE ** types){
+struct mtll *mtll_create(size_t * num_nodes, size_t* next_index, void** values
+                                                        , enum TYPE ** types){
     struct mtll* m = calloc(1, sizeof(struct mtll));
     if (m == NULL){
         return NULL;
@@ -9,6 +10,7 @@ struct mtll *mtll_create(size_t * num_nodes, size_t* next_index, void** values, 
     m->next = NULL;
     m->index = *next_index;
     m->num_nested = 0;
+    m->num_references = 0;
 
     //create an empty list - head node has sentinel value as value
     if (*num_nodes == 0){
@@ -26,8 +28,6 @@ struct mtll *mtll_create(size_t * num_nodes, size_t* next_index, void** values, 
         m->num_nested++;
     }
 
-    // printf("Values[0]:%p\n", *(struct mtll**)values[0]);
-
     m->head = node_create(values[0], types[0]);
 
     struct node* curr = m->head;
@@ -43,7 +43,6 @@ struct mtll *mtll_create(size_t * num_nodes, size_t* next_index, void** values, 
     }
     m->num_references = 0;
 
-            
     return m;
 }
 
@@ -279,9 +278,6 @@ int mtll_insert(char* list_idx, char* idx, char* val, struct mtll** head_ptr){
         free(type);
         return 0;
     }
-
-    // printf("NUMREF:%d NUMNEST:%d for idx%ld\n", m->num_references, m->num_references, m->index);
-
 
 
     // if (*type == REFERENCE){
