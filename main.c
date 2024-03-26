@@ -2,7 +2,7 @@
 #include "node.h"
 #include "input_parser.h"
 #include "commands.h"
-#include "type.h"
+#include "structures.h"
 
 
 int main(int argc, char** argv) {
