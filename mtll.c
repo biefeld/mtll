@@ -311,6 +311,11 @@ int mtll_insert(char* list_idx, char* idx, char* val, struct mtll** head_ptr){
             char* x = m->head->val + strcspn(m->head->val, "\n");
             memcpy(x, "\0", 1); //Hacky way to trim trailing \n 
             break;
+        case REFERENCE:
+            // printf("values:%p\n", *(struct mtll**)value);
+            m->head->val = realloc(m->head->val, sizeof(struct mtll*));
+            memcpy(m->head->val, ret, sizeof(struct mtll*));
+            break;
         default:
             break;
         }
@@ -361,6 +366,15 @@ int mtll_insert(char* list_idx, char* idx, char* val, struct mtll** head_ptr){
         cursor->next = new;
     }
 
+    if (*type == REFERENCE){
+        m->num_nested++;
+        char* idx = calloc(strcspn(val, "}"), sizeof(char));
+        memcpy(idx, val + 1, strcspn(val, "}") - 1);
+        struct mtll* ref = mtll_valid_idx(idx, *head_ptr);
+        free(idx);
+        (ref->num_references)++;
+    }
+    
     mtll_post_view(list_idx, head_ptr);
 
     free(pos);
