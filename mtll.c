@@ -419,6 +419,7 @@ int mtll_delete(char* list_idx, char* idx, struct mtll** head_ptr){
         *value = -1;
         enum TYPE* type = malloc(sizeof(enum TYPE));
         *type = NaT;
+        m->head->val = realloc(m->head->val, sizeof(int));
         memcpy(m->head->val, value, sizeof(int));
         memcpy(m->head->type, type, sizeof(enum TYPE));
         
