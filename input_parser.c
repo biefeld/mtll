@@ -28,8 +28,14 @@ int valid_value(char* value, void* ret, enum TYPE* type,
 
     free(garbage);
 
-    //-1 is to remove the newline counted
-    if (strlen(value) - 1 == 1 && isprint(value[0])){
+    //This is to account for INSERT stripping the \n away
+    int* insert_factor = calloc(1, sizeof(int));
+    if (insert_idx == NULL){
+        *insert_factor = 1;
+    }
+
+    //-1 is to remove the newline counted -> - 0 if we are using INSERt
+    if (strlen(value) - *insert_factor == 1 && isprint(value[0]) != 0){
 
         //Cannot have a single brace character at all
         if (value[0] == '{' || value[0] == '}'){
@@ -38,8 +44,10 @@ int valid_value(char* value, void* ret, enum TYPE* type,
 
         memcpy(ret, value, 1);
         *type = CHAR;
+        free(insert_factor);
         return 1;
     }
+
 
     //Determine if we have a string, reference or invalid string
     size_t* open_brace_idx = calloc(1, sizeof(size_t));
@@ -54,6 +62,7 @@ int valid_value(char* value, void* ret, enum TYPE* type,
         free(close_brace_idx);
         memcpy(ret, value, strlen(value));
         *type = STRING;
+        free(insert_factor);
         return 1;
     }
 
@@ -66,20 +75,23 @@ int valid_value(char* value, void* ret, enum TYPE* type,
     if (*open_brace_idx != 0){
         free(open_brace_idx);
         free(close_brace_idx);
+        free(insert_factor);
         return 0;
     }
 
-     if (*close_brace_idx != strlen(value) - 2){
+     if (*close_brace_idx != strlen(value) - 1 - *insert_factor){
         free(open_brace_idx);
         free(close_brace_idx);
+        free(insert_factor);
         return 0;
     }
 
     //We have non-digit characters within {} -> invalid reference
-    for (size_t i = 1; i < strlen(value) - 2; i++){
+    for (size_t i = 1; i < strlen(value) - 1 - *insert_factor; i++){
         if(!isdigit(value[i])){
             free(open_brace_idx);
             free(close_brace_idx);
+            free(insert_factor);
             return 0;
         }
     }
@@ -89,7 +101,9 @@ int valid_value(char* value, void* ret, enum TYPE* type,
 
     //Extract digits we reference
     char* idx = calloc(strcspn(value, "}"), sizeof(char));
-    memcpy(idx, value + 1, strcspn(value, "}") - 1);
+    memcpy(idx, value + 1, strcspn(value, "}") - *insert_factor);
+
+    free(insert_factor);
 
     //If we are calling INSERT, and attempt to self-reference
     if(insert_idx != NULL){
