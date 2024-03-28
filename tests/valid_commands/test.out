@@ -32,3 +32,8 @@ Number of lists: 2
 List 1
 List 2
 List 3:   ->  ->                              ->     -> 123 -> 1324 -> 43215 -> 12.40 -> 0.00 -> 99.99
+Number of lists: 3
+List 1
+List 2
+List 3
+Nested 4: {List 3} -> {List 1} -> {List 1} -> {List 2}
