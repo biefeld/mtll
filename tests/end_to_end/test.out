@@ -1,8 +1,7 @@
-List 0: {placeholder}
+INVALID COMMAND: NEW
 INVALID COMMAND: VIEW
-{placeholder}
-Number of lists: 1
-List 0
+INVALID COMMAND: VIEW
+Number of lists: 0
 INVALID COMMAND: VIEW
 INVALID COMMAND: VIEW
 INVALID COMMAND: INSERT
@@ -11,40 +10,36 @@ INVALID COMMAND: INPUT
 INVALID COMMAND: INPUT
 INVALID COMMAND: INPUT
 INVALID COMMAND: TYPE
-reference
-List 0: 
+INVALID COMMAND: TYPE
+INVALID COMMAND: DELETE
+Number of lists: 0
+INVALID COMMAND: VIEW
+INVALID COMMAND: VIEW-NESTED
+INVALID COMMAND: REMOVE
+Number of lists: 0
+INVALID COMMAND: VIEW
+INVALID COMMAND: VIEW
+List 0: fdkfdjfas -> 1 -> 200.00
 Number of lists: 1
 List 0
-
-Displaying elements nested
-List 0 has been removed.
-
-Number of lists: 0
-Number of lists: 0
-INVALID COMMAND: VIEW
-INVALID COMMAND: VIEW
-List 1: fdkfdjfas -> 1 -> 200.00
-Number of lists: 1
-List 1
-INVALID COMMAND: TYPE
 string -> int -> float
 INVALID COMMAND: TYPE
 INVALID COMMAND: TYPE
+INVALID COMMAND: TYPE
 INVALID COMMAND: INSERT
+List 0: fdkfdjfas -> 1 -> 200.00 -> fdjfjdfad
 INVALID COMMAND: INSERT
-List 1: fdkfdjfas -> 1 -> 200.00 -> fdfajfasd
 Number of lists: 1
-List 1
-fdkfdjfas -> 1 -> 200.00 -> fdfajfasd
+List 0
+INVALID COMMAND: VIEW
 INVALID COMMAND: REMOVE
+List 0: 1 -> 200.00 -> fdjfjdfad
 INVALID COMMAND: DELETE
-List 1: 1 -> 200.00 -> fdfajfasd
-List 1: 1 -> fdfajfasd
-List 1 has been removed.
-
-Number of lists: 0
+INVALID COMMAND: DELETE
+INVALID COMMAND: REMOVE
 INVALID COMMAND: VIEW
-INVALID COMMAND: VIEW
-Number of lists: 0
+1 -> 200.00 -> fdjfjdfad
+Number of lists: 1
+List 0
 INVALID COMMAND: TYPE
-INVALID COMMAND: TYPE
+int -> float -> string
