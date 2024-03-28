@@ -1,52 +1,59 @@
 #include "input_parser.h"
 
 
-//return 1 if valid, 0 if not. Copy the parsed value into ret.
+//return 1 if value is valid, 0 if not. 
+//Copy the parsed value into ret, type of value into type
 int valid_value(char* value, void* ret, enum TYPE* type, 
                                 struct mtll** mtll_head_ptr, char* insert_idx){
 
+    //used to check if there are additional characters after scanf
     char* garbage = calloc(BUFFER, sizeof(char)); 
 
-    //Sometimes some of the last buffer makes its way in and messes things up 
+    //Clear the last parsed value 
     memset(ret, 0, strlen(ret));
 
+    //If we scan just one integer
     if (sscanf(value, "%d%s", (int*)ret, garbage) == 1){
-        // printf("Integer\n");
         *type = INT;
         free(garbage);
         return 1;
     }
 
+    //If we scan just one float
     if (sscanf(value, "%f%s", (float*)ret, garbage) == 1){
         *type = FLOAT;
-        // printf("Float\n");
         free(garbage);
         return 1;
     }
 
     free(garbage);
 
-
     //-1 is to remove the newline counted
     if (strlen(value) - 1 == 1 && isprint(value[0])){
+
+        //Cannot have a single brace character at all
+        if (value[0] == '{' || value[0] == '}'){
+            return 0;
+        }
+
         memcpy(ret, value, 1);
         *type = CHAR;
-        // printf("Char\n");
         return 1;
     }
 
-
+    //Determine if we have a string, reference or invalid string
     size_t* open_brace_idx = calloc(1, sizeof(size_t));
     size_t* close_brace_idx = calloc(1, sizeof(size_t));
     *open_brace_idx = strcspn(value, "{");
     *close_brace_idx = strcspn(value, "}");
 
+
+    //There are no { or } characters in the string -> valid
     if (*open_brace_idx == strlen(value) && *close_brace_idx == strlen(value)){
         free(open_brace_idx);
         free(close_brace_idx);
         memcpy(ret, value, strlen(value));
         *type = STRING;
-        // printf("String\n");
         return 1;
     }
 
@@ -55,7 +62,7 @@ int valid_value(char* value, void* ret, enum TYPE* type,
         memcpy(value+strlen(value), "\n", 1);
     }
 
-    //we do not begin and end with { and }
+    //we do not begin and end with { and } -> invalid reference
     if (*open_brace_idx != 0){
         free(open_brace_idx);
         free(close_brace_idx);
@@ -68,9 +75,8 @@ int valid_value(char* value, void* ret, enum TYPE* type,
         return 0;
     }
 
-    //We have non-digit characters
+    //We have non-digit characters within {} -> invalid reference
     for (size_t i = 1; i < strlen(value) - 2; i++){
-        // printf("%ld: %c\n",i, value[i]);
         if(!isdigit(value[i])){
             free(open_brace_idx);
             free(close_brace_idx);
@@ -81,76 +87,70 @@ int valid_value(char* value, void* ret, enum TYPE* type,
     free(open_brace_idx);
     free(close_brace_idx);
 
-
-    //Extract digits
+    //Extract digits we reference
     char* idx = calloc(strcspn(value, "}"), sizeof(char));
     memcpy(idx, value + 1, strcspn(value, "}") - 1);
 
-    //we are inserting list into itself
+    //If we are calling INSERT, and attempt to self-reference
     if(insert_idx != NULL){
         if (strcmp(idx, insert_idx) == 0){
             free(idx);
             return 0;
         }
     }
-    
 
-    struct mtll* m;
 
-    //This checks if ret is a currently available list index
-    if ((*mtll_head_ptr)->index == -1){
-        m = NULL;
-    }
-    for (size_t i = 0; i < strlen(idx); i++){
-        if (!isdigit(idx[i])){
-            m = NULL;
-        }
+    //we have not initialised any lists yet - cant insert
+    if ((*mtll_head_ptr)->index == SENTINEL_LIST_IDX){
+        free(idx);
+        return 0;
     }
 
+    //List we are referencing
+    struct mtll* ref_mtll = NULL;
+
+    //Attemp to find which list we want to insert into
     struct mtll* cursor = (*mtll_head_ptr);
     while(cursor != NULL){
         if (cursor->index == atoi(idx)){
-            m = cursor;
+            ref_mtll = cursor;
             break;
         }
         cursor = cursor->next;
     }
 
     //If we could not find a valid reference
-    if (m == NULL){
+    if (ref_mtll == NULL){
         free(idx);
         return 0;
     }
 
-    //If the nesting would create a nest too deep (m is already nested)
-    if (m->num_nested){
+    //If the nesting would create a nest too deep (ref_mtll is already nested)
+    if (ref_mtll->num_nested){
         free(idx);
         return 0;
     }
 
     //add 1 to how many times the mtll has been referenced
-    m->num_references++;
+    ref_mtll->num_references++;
 
     free(idx);
 
-
-    *(struct mtll**)ret = m;
-    //copy the address which stores the pointer to the mtll to ret
-    // memcpy(ret, &m, sizeof(struct mtll*));
-
-    // printf("MTll is at:%p\n", *(struct mtll**)ret);
-
+    //set the return value to the address of the list we are referencing
+    //this will be processed later
+    *(struct mtll**)ret = ref_mtll;
     *type = REFERENCE;
 
     return 1;
 }
 
-
+//copies val_read, type_read into values, types at index n
 void copy_val_type(enum TYPE** types, void** values, enum TYPE* type_read, 
                                                       void* val_read, size_t n){
+    //No realloc needed -> will always be sizeof(enum TYPE)
     memcpy(types[n], type_read, sizeof(enum TYPE));
 
-
+    //realloc size of values[n] depending on what we store
     switch (*type_read)
     {
     case INT:
@@ -164,24 +164,16 @@ void copy_val_type(enum TYPE** types, void** values, enum TYPE* type_read,
         break;
 
     case CHAR:
-        // values[n] = realloc(values[n], strlen(val_read) + 1);
-        // strcpy((void*)values[n], val_read);
-        // // memcpy(values[n], val_read, sizeof(char));
-        // break;
+        //same as STRING
 
     case STRING:
-        // printf("len:%ld. new_line:%ld\n", strlen(val_read),strcspn(val_read, "\n"));
         values[n] = realloc(values[n], strlen(val_read) + 1);
-        // memcpy(values[n], val_read, strlen(val_read) - 1);
         strcpy((void*)values[n], val_read);
         break;
 
     case REFERENCE:
-        // printf("val_read:%p\n", *(struct mtll**)val_read);
         values[n] = realloc(values[n], sizeof(struct mtll*));
         *(struct mtll**)values[n] = *(struct mtll**)val_read;
-
-        // memcpy(values[n], val_read, sizeof(struct mtll*));
         break;
     
     default:
@@ -191,22 +183,23 @@ void copy_val_type(enum TYPE** types, void** values, enum TYPE* type_read,
     return;
 }
 
-
+//Return 0 for invalid values, 1 for valid values and -1 for early EOF
+//populates values, types with num_vals values
 int parse_values(size_t* num_vals, void** values, enum TYPE** types
                                                 , struct mtll** mtll_head_ptr){
+    
     char* buff = calloc(BUFFER, sizeof(char)); 
 
-
-    //this will be sloted into values
+    //this will be slotted into values
     void* val_read = calloc(BUFFER, sizeof(char));
 
-    //this will be memcpy'd into types
+    //this will be slotted into types
     enum TYPE* type_read = calloc(1, sizeof(enum TYPE));
 
     //the number of values we have read so far
     size_t* num_read = calloc(1, sizeof(size_t));
 
-
+    //Flag which is set to off if we get any invalid values
     int* valid = calloc(1, sizeof(int));
     *valid = 1;
 
@@ -216,7 +209,6 @@ int parse_values(size_t* num_vals, void** values, enum TYPE** types
         if (!valid_value(buff, val_read, type_read, mtll_head_ptr, NULL)){
             *valid = 0;
         }
-
 
         copy_val_type(types, values, type_read, val_read, *num_read);
 
@@ -258,8 +250,8 @@ int valid_command_keyword(char* command){
     return 0;
 }
 
-
 //splits arguments and populates args, num_args
+//returns 0 if there are any invalid padding or similar
 int split_arguments(char* arguments, char** args, int* num_args){
 
     //Clear memory which may be left over from previous calls
@@ -328,14 +320,6 @@ int split_arguments(char* arguments, char** args, int* num_args){
     *space_idx = strcspn(curs, " ");
     *curs_len = strlen(curs);
  
-
-    // //We found a single space after the 2nd arg, no good -> this is fine act
-    // if (*space_idx + 1 == *curs_len){
-    //     free(space_idx);
-    //     free(curs_len);
-    //     return 0;
-    // }
-
     //copy upto the next space into args[1]
     memcpy(args[1], curs, *space_idx);
     (*num_args)++;
@@ -361,7 +345,7 @@ int split_arguments(char* arguments, char** args, int* num_args){
 
 
 //Parses buffer and puts values into command, args and num_args
-//Retunrs true if the command was valid
+//Retunrs 1 if the command/arguments was valid
 int parse_input(char* buffer, char* command, char** args, int* num_args){
 
     //find the first space
@@ -375,9 +359,8 @@ int parse_input(char* buffer, char* command, char** args, int* num_args){
         return 0;
     }
 
-        //clear command and copy up to the first space
+    //clear command and copy up to the first space
     memset(command, 0, BUFFER);
-
 
     //If we have no space
     if (*space_idx == strlen(buffer)){
@@ -398,8 +381,6 @@ int parse_input(char* buffer, char* command, char** args, int* num_args){
     }
 
     memcpy(command, buffer, *space_idx);
-
-
 
     //Ensure that we have a valid keyword (e.g. NEW)
     if (!valid_command_keyword(command)){

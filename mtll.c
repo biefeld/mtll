@@ -1,38 +1,46 @@
 #include "mtll.h"
 
+//Create new mtll, populate with values and types. Set index to next_index
+//Returns the created mtll, or NULL if it could not be created.
 struct mtll *mtll_create(size_t * num_nodes, size_t* next_index, void** values
                                                         , enum TYPE ** types){
+
     struct mtll* m = calloc(1, sizeof(struct mtll));
     if (m == NULL){
+        free(m);
         return NULL;
     }
 
+    //Set default values
     m->next = NULL;
     m->index = *next_index;
     m->num_nested = 0;
     m->num_references = 0;
 
-    //create an empty list - head node has sentinel value as value
+    //No nodes - create empty list with first node having sentinel type NaT.
     if (*num_nodes == 0){
-        int* value = malloc(sizeof(int));
-        *value = -1;
+        int* value = calloc(1, sizeof(int));
         enum TYPE* type = malloc(sizeof(enum TYPE));
         *type = NaT;
+
+        //Set head of mtll to the sentinel node
         m->head = node_create((void*)value, type);
+
         free(value);
         free(type);
         return m;
     }
 
+    //Incerement the number of references we have as we go
     if(*types[0] == REFERENCE){
         m->num_nested++;
     }
 
+    //Create head node
     m->head = node_create(values[0], types[0]);
 
+    //Populate rest of list with nodes
     struct node* curr = m->head;
-
-
     for (size_t i = 1; i < *num_nodes; i++){
         if(*types[i] == REFERENCE){
             m->num_nested++;
@@ -41,40 +49,49 @@ struct mtll *mtll_create(size_t * num_nodes, size_t* next_index, void** values
         curr->next = node_create(values[i], types[i]);
         curr = curr->next;
     }
-    m->num_references = 0;
 
     return m;
 }
 
+//Frees all data associated with mtll m
 void mtll_free(struct mtll* m){
     struct node* cursor = m->head;
     struct node* next;
+
+    //Free all node data
     while (cursor != NULL){
         next = cursor->next;
         node_free(cursor);
         cursor = next;
     }
+
+    //Free the mtll struct
     free(m);
 }
 
+//Frees data for all mtll's
 void mtll_free_all(struct mtll* head){
     struct mtll* cursor = head;
     struct mtll* next;
+
     while(cursor != NULL){
-        // printf("Freeing: %ld\n", cursor->index);
         next = cursor->next;
         mtll_free(cursor);
         cursor = next;
     }
-    // mtll_free(cursor);
 }
 
+//VIEW command for mtll with list_idx=index. 
+//nested=1 will print out contents of the nested loops instead of <List n>
 int mtll_view(char* list_idx, struct mtll** head_ptr, int nested){
-    if ((*head_ptr)->index == -1){
+    //We cannot print uninitialised mtll's
+    if ((*head_ptr)->index == SENTINEL_LIST_IDX){
         return 0;
     }
+
     struct mtll* m = mtll_valid_idx(list_idx, *head_ptr);
     if (m == NULL){
+        free(m);
         return 0;
     }
 
@@ -99,7 +116,7 @@ int mtll_view(char* list_idx, struct mtll** head_ptr, int nested){
 }
 
 void mtll_view_all(struct mtll** head_ptr){
-    if ((*head_ptr)->index == -1){
+    if ((*head_ptr)->index == SENTINEL_LIST_IDX){
         printf("Number of lists: 0\n");
         return;
     }
@@ -130,7 +147,7 @@ void mtll_view_all(struct mtll** head_ptr){
 }
 
 int mtll_view_nested(char* list_idx, struct mtll** head_ptr){
-    if ((*head_ptr)->index == -1){
+    if ((*head_ptr)->index == SENTINEL_LIST_IDX){
         return 0;
     }
     struct mtll* m = mtll_valid_idx(list_idx, *head_ptr);
@@ -208,11 +225,11 @@ int mtll_remove(char* list_idx, struct mtll** head_ptr){
     //special case - we remove the head
     if ((*head_ptr)->index == m->index){
         
-        //clear head and set idx = -1
+        //clear head and set idx = SENTINEL_LIST_IDX
         if ((*head_ptr)->next == NULL){
             mtll_free(m);
             *head_ptr = calloc(1, sizeof(struct mtll));
-            (*head_ptr)->index = -1;
+            (*head_ptr)->index = SENTINEL_LIST_IDX;
             printf("List %s has been removed.\n\n", list_idx);
             mtll_view_all(head_ptr);
             return 1;
@@ -535,39 +552,58 @@ int mtll_delete(char* list_idx, char* idx, struct mtll** head_ptr){
     return 1;
 }
 
+//View the contents of mtll with list_idx. Used after COMMANDS are called
 void mtll_post_view(char* list_idx, struct mtll** head_ptr){
+    //Find the mtll we are working with
     struct mtll* m = mtll_valid_idx(list_idx, *head_ptr);
+    
+    //Nested or simple loop variants
     if (m->num_nested != 0){
         printf("Nested %ld: ", m->index);
     }else{
         printf("List %ld: ", m->index);
     }
+
+    //View list with non-nested format
     mtll_view(list_idx, head_ptr, 0);
 }
 
+//Adds new to end of head_ptr (list of mtll's)
 void mtll_append(struct mtll** head_ptr, struct mtll* new){
-    if ((*head_ptr)->index == -1){
+
+    //We are adding as the first element of the lsit
+    if ((*head_ptr)->index == SENTINEL_LIST_IDX){
         memcpy((*head_ptr), new, sizeof(struct mtll));
-    }else{
-        struct mtll* cursor = (*head_ptr);
-        while (cursor->next != NULL){
-            cursor = cursor->next;
-        }
-        struct mtll* next_new = malloc(sizeof(struct mtll));
-        cursor->next = next_new;
-        memcpy(next_new, new, sizeof(struct mtll));
+        return;
     }
+
+    //Scan thru to find end mtll
+    struct mtll* cursor = (*head_ptr);
+    while (cursor->next != NULL){
+        cursor = cursor->next;
+    }
+
+    //Assign to the next element of the last mtll
+    struct mtll* next_new = malloc(sizeof(struct mtll));
+    cursor->next = next_new;
+    memcpy(next_new, new, sizeof(struct mtll));
 }
 
+//Returns the mtll associated with idx if found, NULL if not
 struct mtll* mtll_valid_idx(char* idx, struct mtll* head){
-    if (head->index == -1){
+    //Uninitialised mtll
+    if (head->index == SENTINEL_LIST_IDX){
         return NULL;
     }
+
+    //If we have an invalid idx    
     for (size_t i = 0; i < strlen(idx); i++){
         if (!isdigit(idx[i])){
             return NULL;
         }
     }
+
+    //Scan through mtll's, finding the correct idx
     struct mtll* cursor = head;
     while(cursor != NULL){
         if (cursor->index == atoi(idx)){
@@ -575,22 +611,29 @@ struct mtll* mtll_valid_idx(char* idx, struct mtll* head){
         }
         cursor = cursor->next;
     }
-    return NULL;
 
+    //Not found
+    return NULL;
 }
 
+//Return 1 if valid, 0 if not. Must be numerical plus one sign character (opt)
 int mtll_valid_node_idx(char* idx){
+    //Check 1st char is digit or sing
     if (!isdigit(idx[0]) && idx[0] != '-' && idx[0] != '+'){
         return 0;
     }
+
+    //Check rest are sign
     for (size_t i = 1; i < strlen(idx); i++){
         if (!isdigit(idx[i])){
             return 0;
         }
     }
+
     return 1;
 }
 
+//Puts the length of the mtll in m_len. If we have an uninitialized mtll, = -1
 void mtll_length(struct mtll* m, int* m_len){
     if (*(m->head->type) == NaT){
         *m_len = -1;

@@ -1,6 +1,6 @@
 #include "commands.h"
 
-char* commands[N_COMMANDS] = {"NEW", "VIEW", "TYPE", 
+const char* commands[N_COMMANDS] = {"NEW", "VIEW", "TYPE", 
                                    "REMOVE", "INSERT", "DELETE", "VIEW-NESTED"};
 
 

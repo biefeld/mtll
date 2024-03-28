@@ -11,18 +11,42 @@ int main(int argc, char** argv) {
     char* buffer = calloc(BUFFER, sizeof(char));
     char* command = calloc(BUFFER, sizeof(char));
     int* num_args = calloc(1, sizeof(int));
+
+    if (buffer == NULL || command == NULL || num_args == NULL){
+        free(buffer);
+        free(command);
+        free(num_args);
+        return 1;
+    }
     
     //pointer to the first element of a list of MAX_ARGS char* pointers
     //each contain a pointer to the first element of a char list
     char** args = calloc(MAX_ARGS, sizeof(char *)); 
+    if (args == NULL){
+        free(args);
+        free(buffer);
+        free(command);
+        free(num_args);
+        return 1;
+    }
+
     for (int i=0; i<MAX_ARGS; i++) {
         args[i] = calloc(BUFFER, sizeof(char));
+
+        if (args == NULL){
+            free(args[i]);
+            free(args);
+            free(buffer);
+            free(command);
+            free(num_args);
+            return 1;
+        }
     }
 
     //Allocate pointer while holds the address of a pointer to the first mtll
     struct mtll** mtll_head_ptr = calloc(1, sizeof(struct mtll*));
     *mtll_head_ptr = calloc(1, sizeof(struct mtll));
-    (*mtll_head_ptr)->index = -1; //sentinel value to indicate not initialised
+    (*mtll_head_ptr)->index = SENTINEL_LIST_IDX; //sentinel value to indicate not initialised
 
     //Allocate pointer to the next_list_idx, and set it pointing to the value 0
     size_t* next_list_idx = calloc(1, sizeof(size_t));

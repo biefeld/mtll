@@ -17,10 +17,10 @@ for test in tests/*; do
     STDOUT_DIFF=$(diff $test/test.out out.tmp)
 
     if [ "$STDOUT_DIFF" ]; then
-        echo -e "\t❌ $name test failed."
+        echo -e "\t❌ $name failed."
         echo -e "STDOUT diff:\n $STDOUT_DIFF\n"
     else
-        echo -e "\t✅ $name test passed!"
+        echo -e "\t✅ $name passed!"
         let "PASSED++"
     fi
 done
