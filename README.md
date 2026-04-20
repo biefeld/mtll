@@ -4,12 +4,14 @@ This is a C implementation of a multi-typed linked list (MTLL) data structure, w
 
 It includes a CLI tool which can be used to investigate the functionality of MTLL's without the need for programming. This is a powerful tool for those interested in learning data structures/algorithms but are not confident writing programs in C. See [CLI Usage](#cli-usage) for permitted commands.
 
-The implementation uses dynamic memory allocation, supporting large instances of MTLL's, nested lists, and the need for dynamic editing of MTLL's and nodes.
+This implementation uses dynamic memory allocation, supporting large instances of MTLL's, nested lists, and the need for dynamic editing of MTLL's and nodes.
 
 The MTLL data structure itself has been implemented as a linked list, instead of a dynamic array, for simplicity, cohesion and dynamic memory allocation.
 
 
 ## CLI Usage
+
+To use the CLI, first build an executable by running `make` in a terminal, followed by `./mtll`.
 
 Equivelant function calls (and additional utilities) can be found within [mtll.c](src/mtll.c) or [mtll.h](include/mtll.h) for those wanting to utilize the data structure in a program.
 
@@ -78,7 +80,7 @@ List 0
 List 4
 ```
 
-Removal of a MTLL while it is referenced by anyother list is not permitted.
+Removal of a MTLL while it is referenced by an other list is not permitted.
 
 ```
 > VIEW 0
