@@ -8,8 +8,6 @@ The implementation uses dynamic memory allocation, supporting large instances of
 
 The MTLL data structure itself has been implemented as a linked list, instead of a dynamic array, for simplicity, cohesion and dynamic memory allocation.
 
-how it was implemnted (architecture etc idk)
-
 
 ## CLI Usage
 
