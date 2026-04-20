@@ -1,36 +1,27 @@
 CC=gcc
-FLAGS=-g -O2 -Wall -Werror -pedantic -Wvla -Wuninitialized -Wno-unused-result -std=c99
-OBJS=mtll.o commands.o input_parser.o node.o main.o
+CFLAGS=-Wall -Werror -pedantic -Wvla -Wuninitialized -Wno-unused-result -std=c2x -g
+LDFLAGS=-lm -lpthread
+INCLUDE=-Iinclude
 TARGET=mtll
 TEST_SCRIPT=test.sh
 
 build: all
+	rm -fr mtll.dSYM
 
 all: $(TARGET)
 	@ # requires TARGET rule, which we can change in the constant up the top
 
-$(TARGET): $(OBJS)
-	@ # requires OBJS rule for all objest within the variable, which again we can change.
-	@ # $@ is the target name, in this case TARGET (useful as this will be what the binary is called)
-	@ # $^ outputs all requirements/prerequisites, in this case all objects within OBJS (useful as those are our object files which have not been linked yet)
-	$(CC) $(FLAGS) $^ -o $@
+$(TARGET): src/main.c src/commands.c src/input_parser.c src/mtll.c src/node.c
+	@ $(CC) $^ $(INCLUDE) $(CFLAGS) $(LDFLAGS) -o $@
 
-%.o: %.c
-	@ # the -c flag tells us to make object (.o) files and to not link to a binary yet
-	@ # as we are only working with one .c to one .o file at a time (given by the % wildcard), we ise $< which is only the first requirement/prerequisitez
-	$(CC) -c $(FLAGS) $< -o $@
-
-build_tests: $(TARGET)
-	@ echo "Make my tests!"
 
 .PHONY:
-test: build_tests
+test: build
 	chmod u+x ${TEST_SCRIPT}
 	./${TEST_SCRIPT}
 
 .PHONY:
 clean:
-	rm -f $(OBJS)
 	rm -f $(TARGET)
 
 debug: $(TARGET)

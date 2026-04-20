@@ -79,7 +79,7 @@ int valid_value(char* value, void* ret, enum TYPE* type,
         return 0;
     }
 
-     if (*close_brace_idx != strlen(value) - 2){
+     if (*close_brace_idx != strlen(value) - 1 - *insert_factor){
         free(open_brace_idx);
         free(close_brace_idx);
         free(insert_factor);
@@ -87,7 +87,7 @@ int valid_value(char* value, void* ret, enum TYPE* type,
     }
 
     //We have non-digit characters within {} -> invalid reference
-    for (size_t i = 1; i < strlen(value) - 2; i++){
+    for (size_t i = 1; i < strlen(value) - 1 - *insert_factor; i++){
         if(!isdigit(value[i])){
             free(open_brace_idx);
             free(close_brace_idx);
