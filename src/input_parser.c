@@ -39,6 +39,7 @@ int valid_value(char* value, void* ret, enum TYPE* type,
 
         //Cannot have a single brace character at all
         if (value[0] == '{' || value[0] == '}'){
+            free(insert_factor);
             return 0;
         }
 
