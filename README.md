@@ -8,6 +8,8 @@ This implementation uses dynamic memory allocation, supporting large instances o
 
 The MTLL data structure itself has been implemented as a linked list, instead of a dynamic array, for simplicity, cohesion and dynamic memory allocation.
 
+Documentation for intefacing with the MTLL data structure can be read within [mtll.h](include/mtll.h). Note that some functions are only intended to be used internally, such as those freeing MTLL memory.
+
 
 ## CLI Usage
 
