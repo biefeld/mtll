@@ -24,5 +24,9 @@ test: build
 clean:
 	rm -f $(TARGET)
 
+valgrind: build
+	chmod u+x ${TEST_SCRIPT}
+	./${TEST_SCRIPT} --valgrind
+
 debug: $(TARGET)
 	valgrind --leak-check=full -s --track-origins=yes --show-leak-kinds=all --error-exitcode=42 --exit-on-first-error=yes --errors-for-leak-kinds=all --track-fds=yes ./$(TARGET)	
