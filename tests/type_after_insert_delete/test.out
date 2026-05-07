@@ -1,0 +1,9 @@
+List 0: hello -> 42 -> 3.14
+string -> int -> float
+hello -> 42 -> 3.14
+List 0: z -> hello -> 42 -> 3.14
+char -> string -> int -> float
+z -> hello -> 42 -> 3.14
+List 0: z -> hello -> 42
+char -> string -> int
+z -> hello -> 42

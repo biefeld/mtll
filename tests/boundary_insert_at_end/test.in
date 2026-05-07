@@ -1,0 +1,9 @@
+NEW 3
+a
+b
+c
+VIEW 0
+INSERT 0 3 d
+VIEW 0
+INSERT 0 -1 e
+VIEW 0
