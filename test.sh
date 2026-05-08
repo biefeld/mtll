@@ -20,12 +20,22 @@ for test in tests/*; do
     TOTAL=$((TOTAL + 1))
     name=$(echo "$test" | cut -f 2 -d '/' | cut -f 2- -d '-')
 
+    if [ ! -f "$test/test.in" ]; then
+        echo -e "\t❌ $name failed (missing test.in)."
+        continue
+    fi
+
+    if [ ! -f "$test/test.out" ]; then
+        echo -e "\t❌ $name failed (missing test.out)."
+        continue
+    fi
+
     if [ $VALGRIND -eq 1 ]; then
         $RUNNER ./$BINARY < "$test/test.in" 1> out.tmp  # keep valgrind stderr visible
     else
         ./$BINARY < "$test/test.in" 1> out.tmp 2> /dev/null
     fi
-    
+
     # check valgrind exit code
     if [ $? -ne 0 ] && [ $VALGRIND -eq 1 ]; then
         echo -e "\t❌ $name failed (memory error)."
