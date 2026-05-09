@@ -1,6 +1,6 @@
 # Multi-Typed Linked List (MTLL)
 
-![Tests](https://github.com/biefeld/mtll/actions/workflows/tests.yml/badge.svg)
+[![Tests](https://github.com/biefeld/mtll/actions/workflows/test.yml/badge.svg)](https://github.com/biefeld/mtll/actions/workflows/test.yml)
 
 A C implementation of a **multi-typed linked list** (MTLL): a linked list capable of holding heterogeneous values (integers, floats, chars, strings, and references to other lists) within a single structure. Supports nested lists, dynamic insertion and deletion, and a fully interactive CLI for exploring the data structure without writing code.
 
