@@ -1,0 +1,9 @@
+List 0: a -> b
+Nested 1: {List 0} -> c
+INVALID COMMAND: NEW
+a -> b
+{List 0} -> c
+INVALID COMMAND: VIEW
+a -> b
+{a -> b} -> c
+INVALID COMMAND: VIEW-NESTED

@@ -1,0 +1,12 @@
+List 0: a -> b -> c -> d
+a -> b -> c -> d
+List 0: a -> X -> b -> c -> d
+a -> X -> b -> c -> d
+List 0: X -> b -> c -> d
+X -> b -> c -> d
+List 0: X -> b -> Y -> c -> d
+X -> b -> Y -> c -> d
+List 0: X -> b -> Y -> c
+X -> b -> Y -> c
+List 0: X -> Y -> c
+X -> Y -> c

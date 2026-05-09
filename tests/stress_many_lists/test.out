@@ -1,0 +1,87 @@
+List 0: item0a -> item0b
+List 1: item1a -> item1b
+List 2: item2a -> item2b
+List 3: item3a -> item3b
+List 4: item4a -> item4b
+List 5: item5a -> item5b
+List 6: item6a -> item6b
+List 7: item7a -> item7b
+List 8: item8a -> item8b
+List 9: item9a -> item9b
+Number of lists: 10
+List 0
+List 1
+List 2
+List 3
+List 4
+List 5
+List 6
+List 7
+List 8
+List 9
+List 0 has been removed.
+
+Number of lists: 9
+List 1
+List 2
+List 3
+List 4
+List 5
+List 6
+List 7
+List 8
+List 9
+List 2 has been removed.
+
+Number of lists: 8
+List 1
+List 3
+List 4
+List 5
+List 6
+List 7
+List 8
+List 9
+List 4 has been removed.
+
+Number of lists: 7
+List 1
+List 3
+List 5
+List 6
+List 7
+List 8
+List 9
+List 6 has been removed.
+
+Number of lists: 6
+List 1
+List 3
+List 5
+List 7
+List 8
+List 9
+List 8 has been removed.
+
+Number of lists: 5
+List 1
+List 3
+List 5
+List 7
+List 9
+Number of lists: 5
+List 1
+List 3
+List 5
+List 7
+List 9
+List 1: prepended -> item1a -> item1b
+prepended -> item1a -> item1b
+List 3: prepended -> item3a -> item3b
+prepended -> item3a -> item3b
+List 5: prepended -> item5a -> item5b
+prepended -> item5a -> item5b
+List 7: prepended -> item7a -> item7b
+prepended -> item7a -> item7b
+List 9: prepended -> item9a -> item9b
+prepended -> item9a -> item9b

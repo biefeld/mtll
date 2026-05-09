@@ -1,0 +1,47 @@
+NEW 2
+item0a
+item0b
+NEW 2
+item1a
+item1b
+NEW 2
+item2a
+item2b
+NEW 2
+item3a
+item3b
+NEW 2
+item4a
+item4b
+NEW 2
+item5a
+item5b
+NEW 2
+item6a
+item6b
+NEW 2
+item7a
+item7b
+NEW 2
+item8a
+item8b
+NEW 2
+item9a
+item9b
+VIEW ALL
+REMOVE 0
+REMOVE 2
+REMOVE 4
+REMOVE 6
+REMOVE 8
+VIEW ALL
+INSERT 1 0 prepended
+VIEW 1
+INSERT 3 0 prepended
+VIEW 3
+INSERT 5 0 prepended
+VIEW 5
+INSERT 7 0 prepended
+VIEW 7
+INSERT 9 0 prepended
+VIEW 9

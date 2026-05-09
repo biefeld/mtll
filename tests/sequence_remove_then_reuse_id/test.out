@@ -1,0 +1,16 @@
+List 0: one -> two
+List 1: three -> four
+Number of lists: 2
+List 0
+List 1
+List 0 has been removed.
+
+Number of lists: 1
+List 1
+Number of lists: 1
+List 1
+List 2: five -> six
+Number of lists: 2
+List 1
+List 2
+five -> six
