@@ -1,0 +1,16 @@
+NEW 3
+x
+y
+z
+NEW 3
+first
+{0}
+last
+VIEW 0
+VIEW 1
+REMOVE 0
+VIEW ALL
+REMOVE 1
+VIEW ALL
+REMOVE 0
+VIEW ALL

@@ -1,0 +1,8 @@
+List 0: a -> b
+a -> b
+INVALID COMMAND: INSERT
+a -> b
+Nested 1: {List 0} -> c
+{List 0} -> c
+INVALID COMMAND: INSERT
+a -> b

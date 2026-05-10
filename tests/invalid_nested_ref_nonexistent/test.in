@@ -1,0 +1,8 @@
+NEW 2
+{99}
+hello
+VIEW 0
+NEW 1
+a
+INSERT 1 0 {99}
+VIEW 1
