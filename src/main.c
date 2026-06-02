@@ -6,6 +6,8 @@
 
 
 int main(int argc, char** argv) {
+    setvbuf(stdin, NULL, _IONBF, 0);
+    setvbuf(stdout, NULL, _IOLBF, 0);
 
     //Allocate memory we will use for each input
     char* buffer = calloc(BUFFER, sizeof(char));

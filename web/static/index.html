@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MTLL — Multi-Typed Linked List</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Berkeley+Mono:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #0b0d0f;
+    --surface:   #111416;
+    --surface2:  #181b1e;
+    --border:    rgba(255,255,255,0.07);
+    --border2:   rgba(255,255,255,0.13);
+    --text:      #e8e6e0;
+    --muted:     #6b6f74;
+    --accent:    #39d98a;
+    --accent2:   #1aab62;
+    --blue:      #60a5fa;
+    --amber:     #fbbf24;
+    --pink:      #f472b6;
+    --red:       #f87171;
+    --purple:    #a78bfa;
+    --mono:      'Berkeley Mono', 'Fira Code', monospace;
+    --sans:      'DM Sans', sans-serif;
+  }
+
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--sans); overflow: hidden; }
+
+  /* scanline texture */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+    pointer-events: none; z-index: 999;
+  }
+
+  header {
+    display: flex; align-items: center; gap: 16px;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .logo {
+    font-family: var(--mono); font-size: 13px; font-weight: 700;
+    color: var(--accent); letter-spacing: 0.08em;
+  }
+  .logo span { color: var(--muted); font-weight: 400; }
+  .tagline { font-size: 12px; color: var(--muted); font-weight: 300; }
+  .header-links { margin-left: auto; display: flex; gap: 10px; }
+  .header-links a {
+    font-size: 11px; color: var(--muted); text-decoration: none;
+    font-family: var(--mono); letter-spacing: 0.04em;
+    padding: 4px 10px; border: 1px solid var(--border);
+    border-radius: 4px; transition: all 0.15s;
+  }
+  .header-links a:hover { color: var(--accent); border-color: var(--accent2); }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 420px 1fr;
+    height: calc(100vh - 45px);
+  }
+
+  /* ── TERMINAL PANE ── */
+  .terminal-pane {
+    display: flex; flex-direction: column;
+    border-right: 1px solid var(--border);
+    background: var(--bg);
+    min-height: 0;
+  }
+  .pane-header {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .pane-title { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+  .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); margin-left: auto; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .status-dot.disconnected { background: var(--red); animation: none; }
+
+  .output {
+    flex: 1; min-height: 0; overflow-y: auto; padding: 14px;
+    font-family: var(--mono); font-size: 12.5px; line-height: 1.75;
+    scroll-behavior: smooth;
+  }
+  .output::-webkit-scrollbar { width: 4px; }
+  .output::-webkit-scrollbar-track { background: transparent; }
+  .output::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  .line { display: flex; gap: 8px; animation: fadein 0.1s ease; }
+  @keyframes fadein { from{opacity:0;transform:translateY(2px)} to{opacity:1;transform:none} }
+  .line-prompt { color: var(--accent); flex-shrink: 0; }
+  .line-cmd { color: var(--text); }
+  .line-out { color: var(--muted); padding-left: 16px; }
+  .line-success { color: var(--accent); padding-left: 16px; }
+  .line-ref { color: var(--blue); padding-left: 16px; }
+  .line-err { color: var(--red); padding-left: 16px; }
+  .line-info { color: var(--amber); padding-left: 16px; }
+
+  .input-area {
+    padding: 10px 14px;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .input-row { display: flex; align-items: center; gap: 8px; }
+  .input-prompt { font-family: var(--mono); font-size: 13px; color: var(--accent); flex-shrink: 0; }
+  #cmd-input {
+    flex: 1; background: transparent; border: none; outline: none;
+    font-family: var(--mono); font-size: 12.5px; color: var(--text);
+    caret-color: var(--accent);
+  }
+  #cmd-input::placeholder { color: var(--muted); }
+  .input-hint { font-size: 10px; color: var(--muted); margin-top: 6px; font-family: var(--mono); }
+  .input-hint kbd {
+    display: inline-block; padding: 1px 5px;
+    border: 1px solid var(--border2); border-radius: 3px;
+    font-size: 10px; color: var(--muted);
+  }
+
+  /* quick commands */
+  .quick-cmds {
+    display: flex; gap: 6px; flex-wrap: wrap; padding: 8px 14px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .qcmd {
+    font-family: var(--mono); font-size: 10.5px;
+    padding: 3px 8px; border: 1px solid var(--border2);
+    border-radius: 3px; color: var(--muted); cursor: pointer;
+    background: transparent; transition: all 0.15s;
+  }
+  .qcmd:hover { color: var(--accent); border-color: var(--accent2); background: rgba(57,217,138,0.05); }
+
+  /* ── CANVAS PANE ── */
+  .canvas-pane {
+    display: flex; flex-direction: column;
+    background: var(--bg);
+    min-height: 0;
+  }
+  .canvas-toolbar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .toolbar-title { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+  .view-btns { margin-left: auto; display: flex; gap: 6px; }
+  .view-btn {
+    font-size: 10.5px; font-family: var(--mono);
+    padding: 3px 10px; border: 1px solid var(--border2);
+    border-radius: 3px; color: var(--muted); cursor: pointer;
+    background: transparent; transition: all 0.15s;
+  }
+  .view-btn.active, .view-btn:hover { color: var(--accent); border-color: var(--accent2); }
+
+  .canvas-body {
+    flex: 1; min-height: 0; overflow-y: auto; padding: 20px 24px;
+    display: flex; flex-direction: column; gap: 24px;
+  }
+  .canvas-body::-webkit-scrollbar { width: 4px; }
+  .canvas-body::-webkit-scrollbar-track { background: transparent; }
+  .canvas-body::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  .list-card {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    overflow: hidden;
+    flex-shrink: 0;
+    animation: slidein 0.2s ease;
+  }
+  @keyframes slidein { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
+  .list-card-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+  .list-id {
+    font-family: var(--mono); font-size: 11px; font-weight: 700;
+    color: var(--accent); letter-spacing: 0.06em;
+  }
+  .list-badge {
+    font-size: 10px; font-family: var(--mono);
+    padding: 2px 7px; border-radius: 20px;
+    border: 1px solid;
+  }
+  .badge-nested { color: var(--blue); border-color: rgba(96,165,250,0.3); background: rgba(96,165,250,0.06); }
+  .badge-plain  { color: var(--muted); border-color: var(--border); }
+  .list-len { margin-left: auto; font-family: var(--mono); font-size: 10px; color: var(--muted); }
+  .list-card-body { padding: 16px 14px; overflow-x: auto; }
+  .list-card-body::-webkit-scrollbar { height: 3px; }
+  .list-card-body::-webkit-scrollbar-track { background: transparent; }
+  .list-card-body::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  .node-row { display: flex; align-items: center; gap: 0; width: max-content; }
+  .node-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .node-box {
+    padding: 5px 12px; border-radius: 5px; border: 1px solid;
+    font-family: var(--mono); font-size: 12px; white-space: nowrap;
+    transition: transform 0.1s;
+  }
+  .node-box:hover { transform: translateY(-1px); }
+  .node-label { font-size: 9.5px; font-family: var(--mono); letter-spacing: 0.05em; }
+
+  .t-int    { color: #93c5fd; border-color: rgba(96,165,250,0.35); background: rgba(96,165,250,0.08); }
+  .t-float  { color: #6ee7b7; border-color: rgba(52,211,153,0.35); background: rgba(52,211,153,0.08); }
+  .t-char   { color: #fcd34d; border-color: rgba(251,191,36,0.35); background: rgba(251,191,36,0.08); }
+  .t-string { color: #c4b5fd; border-color: rgba(167,139,250,0.35); background: rgba(167,139,250,0.08); }
+  .t-ref    { color: #f9a8d4; border-color: rgba(244,114,182,0.35); background: rgba(244,114,182,0.08); font-style: italic; }
+  .nl-int    { color: #60a5fa; }
+  .nl-float  { color: #34d399; }
+  .nl-char   { color: #fbbf24; }
+  .nl-string { color: #a78bfa; }
+  .nl-ref    { color: #f472b6; }
+
+  .arrow { color: var(--muted); font-family: var(--mono); font-size: 14px; padding: 0 4px; margin-bottom: 16px; }
+  .null-marker { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-bottom: 16px; padding: 0 4px; opacity: 0.5; }
+
+  .list-card-body--expanded { display: flex; flex-direction: column; gap: 0; }
+  .sublist-row {
+    display: flex; align-items: stretch; gap: 0;
+    margin: 4px 0 4px 24px;
+  }
+  .sublist-connector {
+    width: 2px; min-height: 100%;
+    background: rgba(244,114,182,0.3);
+    border-radius: 1px;
+    margin-right: 12px;
+    flex-shrink: 0;
+  }
+  .sublist-body {
+    flex: 1; min-width: 0;
+    background: rgba(244,114,182,0.04);
+    border: 1px solid rgba(244,114,182,0.15);
+    border-radius: 6px;
+    padding: 8px 12px;
+  }
+  .sublist-label {
+    font-family: var(--mono); font-size: 10px;
+    color: #f472b6; letter-spacing: 0.05em;
+    margin-bottom: 8px;
+  }
+  .sublist-nodes { width: max-content; }
+  .sublist-nodes .node-box { font-size: 11px; padding: 3px 9px; }
+  .sublist-nodes .node-label { font-size: 9px; }
+  .sublist-nodes .arrow { font-size: 12px; }
+  .sublist-nodes .null-marker { font-size: 9px; }
+
+  .empty-state {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 16px;
+    color: var(--muted); text-align: center;
+  }
+  .empty-glyph { font-family: var(--mono); font-size: 48px; opacity: 0.15; line-height: 1; }
+  .empty-text { font-size: 13px; line-height: 1.6; }
+  .empty-example {
+    font-family: var(--mono); font-size: 11px;
+    padding: 10px 16px; border: 1px solid var(--border);
+    border-radius: 6px; background: var(--surface);
+    text-align: left; color: var(--muted);
+  }
+  .empty-example .hl { color: var(--accent); }
+
+  /* legend */
+  .legend {
+    display: flex; gap: 14px; flex-wrap: wrap;
+    padding: 10px 24px; border-top: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .leg { display: flex; align-items: center; gap: 5px; }
+  .leg-swatch { width: 8px; height: 8px; border-radius: 2px; border: 1px solid; }
+  .leg-label { font-family: var(--mono); font-size: 10px; color: var(--muted); }
+
+  /* multi-line input pending state */
+  .pending-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-family: var(--mono); font-size: 10.5px;
+    color: var(--amber); background: rgba(251,191,36,0.08);
+    border: 1px solid rgba(251,191,36,0.25);
+    padding: 3px 8px; border-radius: 4px;
+  }
+
+  @media (max-width: 800px) {
+    .layout { grid-template-columns: 1fr; grid-template-rows: 50vh 1fr; }
+    .terminal-pane { border-right: none; border-bottom: 1px solid var(--border); }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">MTLL<span>.demo</span></div>
+  <div class="tagline">Multi-Typed Linked List — interactive explorer</div>
+  <div class="header-links">
+    <a href="https://github.com" target="_blank" id="gh-link">GitHub ↗</a>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- TERMINAL -->
+  <div class="terminal-pane">
+    <div class="pane-header">
+      <span class="pane-title">Terminal</span>
+      <div class="status-dot disconnected" id="status-dot"></div>
+    </div>
+    <div class="quick-cmds" id="quick-cmds">
+      <button class="qcmd" data-cmd="VIEW ALL">VIEW ALL</button>
+      <button class="qcmd" data-cmd="__demo__">Run demo</button>
+      <button class="qcmd" data-cmd="__clear__">Clear</button>
+    </div>
+    <div class="output" id="output"></div>
+    <div class="input-area">
+      <div class="input-row">
+        <span class="input-prompt" id="input-prompt">›</span>
+        <input id="cmd-input" type="text" placeholder="NEW 3  ·  VIEW 0  ·  INSERT 0 1 {id}  — {id} must be a plain list" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="input-hint"><kbd>Enter</kbd> to run &nbsp;·&nbsp; <kbd>↑↓</kbd> history &nbsp;·&nbsp; <kbd>Tab</kbd> complete</div>
+    </div>
+  </div>
+
+  <!-- CANVAS -->
+  <div class="canvas-pane">
+    <div class="canvas-toolbar">
+      <span class="toolbar-title">Visual canvas</span>
+      <div class="view-btns">
+        <button class="view-btn active" id="btn-normal">normal</button>
+        <button class="view-btn" id="btn-nested">expanded</button>
+      </div>
+    </div>
+    <div class="canvas-body" id="canvas-body">
+      <div class="empty-state" id="empty-state">
+        <div class="empty-glyph">∅</div>
+        <div class="empty-text">No lists yet.<br>Create one to see it rendered here.</div>
+        <div class="empty-example">
+          <span class="hl">NEW</span> 3<br>
+          42<br>
+          hello<br>
+          3.14
+        </div>
+      </div>
+    </div>
+    <div class="legend">
+      <div class="leg"><div class="leg-swatch" style="background:rgba(96,165,250,0.08);border-color:rgba(96,165,250,0.35)"></div><span class="leg-label">int</span></div>
+      <div class="leg"><div class="leg-swatch" style="background:rgba(52,211,153,0.08);border-color:rgba(52,211,153,0.35)"></div><span class="leg-label">float</span></div>
+      <div class="leg"><div class="leg-swatch" style="background:rgba(251,191,36,0.08);border-color:rgba(251,191,36,0.35)"></div><span class="leg-label">char</span></div>
+      <div class="leg"><div class="leg-swatch" style="background:rgba(167,139,250,0.08);border-color:rgba(167,139,250,0.35)"></div><span class="leg-label">string</span></div>
+      <div class="leg"><div class="leg-swatch" style="background:rgba(244,114,182,0.08);border-color:rgba(244,114,182,0.35)"></div><span class="leg-label">reference</span></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────────────────────────
+const WS_URL = (() => {
+  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+  return `${proto}://${location.host}/ws/${crypto.randomUUID()}`;
+})();
+
+const GITHUB_URL = 'https://github.com/YOUR_USERNAME/YOUR_REPO';
+document.getElementById('gh-link').href = GITHUB_URL;
+
+// ── STATE ───────────────────────────────────────────────────────────────────
+let ws = null;
+let wsReady = false;
+let pendingLines = null;   // null = normal mode; [] = collecting multi-line
+let pendingCount = 0;
+let history = [];
+let histIdx = -1;
+let expandedView = false;
+
+// parsed list state for canvas
+const lists = new Map(); // id -> { id, values:[], types:[], isNested }
+
+// ── WS ──────────────────────────────────────────────────────────────────────
+function connect() {
+  ws = new WebSocket(WS_URL);
+  ws.onopen = () => {
+    wsReady = true;
+    document.getElementById('status-dot').classList.remove('disconnected');
+    appendLine('out', 'Connected to MTLL process. Type a command or click "Run demo".');
+  };
+  ws.onclose = () => {
+    wsReady = false;
+    document.getElementById('status-dot').classList.add('disconnected');
+    appendLine('err', 'Disconnected. Reconnecting…');
+    setTimeout(connect, 2000);
+  };
+  ws.onerror = () => ws.close();
+  ws.onmessage = (e) => {
+    const msg = JSON.parse(e.data);
+    (msg.output || []).forEach(line => handleOutputLine(line));
+    scheduleCanvasRefresh();
+  };
+}
+
+function send(lines) {
+  if (!wsReady) { appendLine('err', 'Not connected.'); return; }
+  _lastSentCmd = lines.join(' ');
+  // track VIEW-NESTED so we can capture its unprefixed output
+  const vnMatch = lines[0] && lines[0].match(/^VIEW-NESTED\s+(\d+)$/i);
+  if (vnMatch) _lastViewNestedId = parseInt(vnMatch[1]);
+  ws.send(JSON.stringify({ lines }));
+}
+
+// ── OUTPUT ──────────────────────────────────────────────────────────────────
+const output = document.getElementById('output');
+
+function appendLine(type, text) {
+  const div = document.createElement('div');
+  div.className = 'line';
+  if (type === 'cmd') {
+    div.innerHTML = `<span class="line-prompt">›</span><span class="line-cmd">${esc(text)}</span>`;
+  } else if (type === 'out') {
+    div.innerHTML = `<span class="line-out">${esc(text)}</span>`;
+  } else if (type === 'success') {
+    div.innerHTML = `<span class="line-success">${esc(text)}</span>`;
+  } else if (type === 'ref') {
+    div.innerHTML = `<span class="line-ref">${esc(text)}</span>`;
+  } else if (type === 'err') {
+    div.innerHTML = `<span class="line-err">${esc(text)}</span>`;
+  } else if (type === 'info') {
+    div.innerHTML = `<span class="line-info">${esc(text)}</span>`;
+  }
+  output.appendChild(div);
+  output.scrollTop = output.scrollHeight;
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function classifyLine(line) {
+  if (!line) return 'out';
+  if (line.startsWith('INVALID') || line.startsWith('Error') || line.startsWith('ERROR')) return 'err';
+  if (line.includes('{List') || line.startsWith('Nested')) return 'ref';
+  if (line.startsWith('List ') || line.startsWith('Number of lists')) return 'success';
+  return 'out';
+}
+
+let _lastSentCmd = '';
+
+function handleOutputLine(line) {
+  appendLine(classifyLine(line), line);
+  if (line.startsWith('INVALID') && /\{[\d]+\}/.test(_lastSentCmd)) {
+    appendLine('info', '  hint: {id} can only reference a plain (non-nested) list');
+  }
+  parseOutputLine(line);
+}
+
+// ── INPUT ───────────────────────────────────────────────────────────────────
+const input = document.getElementById('cmd-input');
+const prompt = document.getElementById('input-prompt');
+
+const COMPLETIONS = ['NEW ', 'VIEW ', 'VIEW ALL', 'VIEW-NESTED ', 'TYPE ', 'INSERT ', 'DELETE ', 'REMOVE '];
+
+input.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    const val = input.value.trim();
+    if (!val) return;
+    input.value = '';
+    handleInput(val);
+  }
+  if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (histIdx < history.length - 1) histIdx++;
+    input.value = history[history.length - 1 - histIdx] || '';
+  }
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    if (histIdx > 0) histIdx--;
+    else { histIdx = -1; input.value = ''; return; }
+    input.value = history[history.length - 1 - histIdx] || '';
+  }
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    const v = input.value.toUpperCase();
+    const match = COMPLETIONS.find(c => c.startsWith(v) && c !== v);
+    if (match) input.value = match;
+  }
+});
+
+function handleInput(val) {
+  // special local commands
+  if (val === '__clear__') { output.innerHTML = ''; return; }
+  if (val === '__demo__') { runDemo(); return; }
+
+  if (pendingLines !== null) {
+    // multi-line collection mode (gathering values for NEW)
+    appendLine('info', '  ' + val);
+    pendingLines.push(val);
+    pendingCount--;
+    updatePrompt();
+    if (pendingCount <= 0) {
+      // send the NEW command + all values together
+      send([...pendingLines]);
+      pendingLines = null;
+      pendingCount = 0;
+      prompt.textContent = '›';
+    }
+    return;
+  }
+
+  history.push(val); histIdx = -1;
+  appendLine('cmd', val);
+
+  const parts = val.trim().split(/\s+/);
+  const op = parts[0].toUpperCase();
+
+  // detect NEW N — need to collect N value lines before sending
+  if (op === 'NEW' && parts.length === 2) {
+    const n = parseInt(parts[1]);
+    if (!isNaN(n) && n > 0) {
+      // store the original NEW command as first element
+      pendingLines = [val];
+      pendingCount = n;
+      updatePrompt();
+      appendLine('info', `  enter ${n} value${n !== 1 ? 's' : ''}, one per line:`);
+      return;
+    }
+  }
+
+  send([val]);
+}
+
+function updatePrompt() {
+  prompt.textContent = pendingCount > 0 ? `${pendingCount}›` : '›';
+}
+
+// ── QUICK CMDS ──────────────────────────────────────────────────────────────
+document.getElementById('quick-cmds').addEventListener('click', e => {
+  const btn = e.target.closest('.qcmd');
+  if (!btn) return;
+  const cmd = btn.dataset.cmd;
+  input.value = cmd;
+  if (cmd !== '__demo__' && cmd !== '__clear__') {
+    input.focus();
+  } else {
+    handleInput(cmd);
+    input.value = '';
+  }
+});
+
+// ── DEMO ────────────────────────────────────────────────────────────────────
+async function runDemo() {
+  appendLine('info', '— running demo sequence —');
+  const steps = [
+    ['NEW 4', '1.00', 'baguette', '5', 'a'],
+    ['NEW 3', 'first', '{0}', 'last'],
+    ['VIEW 0'],
+    ['TYPE 0'],
+    ['INSERT 0 -1 99'],
+    ['VIEW-NESTED 1'],
+  ];
+  for (const step of steps) {
+    await delay(600);
+    appendLine('cmd', step[0]);
+    if (step.length > 1) step.slice(1).forEach(l => appendLine('info', '  ' + l));
+    send(step);
+    await delay(400);
+  }
+}
+
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ── CANVAS PARSING ──────────────────────────────────────────────────────────
+// Parse output lines to build canvas state
+// Supports: "List N: a -> b -> c" and "Nested N: ..."
+// track which list id we last sent VIEW-NESTED for
+let _lastViewNestedId = null;
+
+function parseOutputLine(line) {
+  // VIEW-NESTED output: "first -> {a -> b -> c} -> last" (no List N: prefix)
+  // We capture it by tracking what VIEW-NESTED command was last sent
+  if (_lastViewNestedId !== null && !line.match(/^(?:List|Nested)\s+\d+:/)) {
+    const id = _lastViewNestedId;
+    _lastViewNestedId = null;
+    if (lists.has(id)) {
+      const rawNodes = line.split(' -> ').map(s => s.trim()).filter(s => s && s !== 'NULL');
+      const existing = lists.get(id);
+      lists.set(id, { ...existing, expandedValues: rawNodes, expandedTypes: rawNodes.map(guessType) });
+      scheduleCanvasRefresh();
+    }
+    return;
+  }
+
+  const listMatch = line.match(/^(?:List|Nested)\s+(\d+):\s+(.+)$/);
+  if (!listMatch) return;
+
+  const id = parseInt(listMatch[1]);
+  const rest = listMatch[2];
+  const isNested = line.startsWith('Nested');
+
+  const rawNodes = rest.split(' -> ').map(s => s.trim()).filter(s => s && s !== 'NULL');
+  const values = rawNodes;
+  const types = values.map(guessType);
+
+  const existing = lists.get(id) || {};
+  lists.set(id, { ...existing, id, values, types, isNested });
+}
+
+function guessType(v) {
+  if (/^\{List \d+\}$/.test(v) || /^\{.+\}$/.test(v)) return 'ref';
+  if (/^-?\d+\.\d+$/.test(v)) return 'float';
+  if (/^-?\d+$/.test(v)) return 'int';
+  if (/^.$/.test(v)) return 'char';
+  return 'string';
+}
+
+// ── CANVAS RENDER ────────────────────────────────────────────────────────────
+let refreshTimer = null;
+function scheduleCanvasRefresh() {
+  clearTimeout(refreshTimer);
+  refreshTimer = setTimeout(renderCanvas, 80);
+}
+
+function renderCanvas() {
+  const body = document.getElementById('canvas-body');
+  const empty = document.getElementById('empty-state');
+
+  if (lists.size === 0) {
+    empty.style.display = 'flex';
+    // remove old cards
+    body.querySelectorAll('.list-card').forEach(c => c.remove());
+    return;
+  }
+
+  empty.style.display = 'none';
+
+  // build set of existing ids
+  const existingCards = new Map();
+  body.querySelectorAll('.list-card').forEach(c => {
+    existingCards.set(parseInt(c.dataset.listId), c);
+  });
+
+  const sortedIds = [...lists.keys()].sort((a,b) => a - b);
+
+  sortedIds.forEach(id => {
+    const data = lists.get(id);
+    let card = existingCards.get(id);
+    const cardHtml = buildCard(data);
+
+    if (!card) {
+      card = document.createElement('div');
+      card.className = 'list-card';
+      card.dataset.listId = id;
+      body.appendChild(card);
+    }
+    card.innerHTML = cardHtml;
+    existingCards.delete(id);
+  });
+
+  // remove stale cards
+  existingCards.forEach(card => card.remove());
+}
+
+function nodeRowHtml(vals, types) {
+  let html = '';
+  vals.forEach((v, i) => {
+    const t = types[i] || guessType(v);
+    html += `
+      <div class="node-wrap">
+        <div class="node-box t-${t}">${esc(v)}</div>
+        <div class="node-label nl-${t}">${t}</div>
+      </div>
+      <span class="arrow">→</span>`;
+  });
+  html += `<span class="null-marker">∅</span>`;
+  return html;
+}
+
+function buildCard(data) {
+  const { id, values, types, isNested } = data;
+  const badgeCls = isNested ? 'badge-nested' : 'badge-plain';
+  const badgeTxt = isNested ? 'nested' : 'list';
+
+  // normal view: always just the flat node row
+  if (!expandedView) {
+    return `
+      <div class="list-card-header">
+        <span class="list-id">${isNested ? 'Nested' : 'List'} ${id}</span>
+        <span class="list-badge ${badgeCls}">${badgeTxt}</span>
+        <span class="list-len">${values.length} node${values.length !== 1 ? 's' : ''}</span>
+      </div>
+      <div class="list-card-body">
+        <div class="node-row">${nodeRowHtml(values, types)}</div>
+      </div>`;
+  }
+
+  // expanded view: render each node; for {List N} refs, add an indented sub-row
+  let bodyHtml = '';
+  values.forEach((v, i) => {
+    const t = types[i] || guessType(v);
+    const refMatch = v.match(/^\{List (\d+)\}$/);
+
+    // the node itself
+    bodyHtml += `
+      <div class="node-wrap">
+        <div class="node-box t-${t}">${esc(v)}</div>
+        <div class="node-label nl-${t}">${t}</div>
+      </div>
+      <span class="arrow">→</span>`;
+
+    // if it's a reference and we have the target list, render it as a sub-row
+    if (refMatch && expandedView) {
+      const refId = parseInt(refMatch[1]);
+      const refData = lists.get(refId);
+      if (refData) {
+        const subNodes = nodeRowHtml(refData.values, refData.types);
+        bodyHtml += `</div>
+          <div class="sublist-row">
+            <div class="sublist-connector"></div>
+            <div class="sublist-body">
+              <div class="sublist-label">List ${refId} (${refData.values.length} nodes)</div>
+              <div class="node-row sublist-nodes">${subNodes}</div>
+            </div>
+          </div>
+          <div class="node-row" style="margin-top:8px">`;
+      }
+    }
+  });
+
+  return `
+    <div class="list-card-header">
+      <span class="list-id">${isNested ? 'Nested' : 'List'} ${id}</span>
+      <span class="list-badge ${badgeCls}">${badgeTxt}</span>
+      <span class="list-badge" style="color:var(--amber);border-color:rgba(251,191,36,0.3);background:rgba(251,191,36,0.06)">expanded</span>
+      <span class="list-len">${values.length} node${values.length !== 1 ? 's' : ''}</span>
+    </div>
+    <div class="list-card-body list-card-body--expanded">
+      <div class="node-row">${bodyHtml}<span class="null-marker">∅</span></div>
+    </div>`;
+}
+
+// ── VIEW TOGGLE ──────────────────────────────────────────────────────────────
+document.getElementById('btn-normal').addEventListener('click', () => {
+  expandedView = false;
+  document.getElementById('btn-normal').classList.add('active');
+  document.getElementById('btn-nested').classList.remove('active');
+  renderCanvas();
+});
+document.getElementById('btn-nested').addEventListener('click', () => {
+  expandedView = true;
+  document.getElementById('btn-nested').classList.add('active');
+  document.getElementById('btn-normal').classList.remove('active');
+  // request VIEW-NESTED for every list that has nested references
+  lists.forEach((data, id) => {
+    if (data.isNested || (data.values && data.values.some(v => /^\{List \d+\}$/.test(v)))) {
+      send([`VIEW-NESTED ${id}`]);
+    }
+  });
+  // also re-render immediately with whatever expanded data we already have
+  renderCanvas();
+});
+
+// also handle REMOVE by deleting from map on "has been removed"
+const _origHandle = handleOutputLine;
+// patch: watch for removal
+const outputObserver = new MutationObserver(() => {
+  const lines = output.querySelectorAll('.line-success');
+  lines.forEach(l => {
+    const txt = l.textContent;
+    const m = txt.match(/List (\d+) has been removed/);
+    if (m) {
+      lists.delete(parseInt(m[1]));
+      scheduleCanvasRefresh();
+    }
+  });
+});
+outputObserver.observe(output, { childList: true });
+
+// ── BOOT ─────────────────────────────────────────────────────────────────────
+async function checkHealth() {
+  try {
+    const r = await fetch('/health');
+    const data = await r.json();
+    if (!data.binary_found) {
+      appendLine('err', '⚠ MTLL binary not found on server.');
+      appendLine('err', `  Set MTLL_BINARY env var or copy your compiled binary next to server.py`);
+      appendLine('err', `  e.g.  cp ../mtll ./mtll   then restart server.py`);
+    } else {
+      appendLine('out', `Binary: ${data.binary}`);
+    }
+  } catch(e) {
+    appendLine('err', 'Could not reach /health endpoint');
+  }
+}
+
+connect();
+checkHealth();
+input.focus();
+</script>
+</body>
+</html>
