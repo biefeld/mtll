@@ -320,9 +320,9 @@
     <div class="input-area">
       <div class="input-row">
         <span class="input-prompt" id="input-prompt">›</span>
-        <input id="cmd-input" type="text" placeholder="NEW 3  ·  VIEW 0  ·  INSERT 0 1 {id}  — {id} must be a plain list" autocomplete="off" spellcheck="false">
+        <input id="cmd-input" type="text" placeholder="NEW 3  ·  VIEW 0  ·  INSERT 0 1 <value>" autocomplete="off" spellcheck="false">
       </div>
-      <div class="input-hint"><kbd>Enter</kbd> to run &nbsp;·&nbsp; <kbd>↑↓</kbd> history &nbsp;·&nbsp; <kbd>Tab</kbd> complete</div>
+      <div class="input-hint"><kbd>Enter</kbd> to run &nbsp;·&nbsp; <kbd>↑↓</kbd> command history &nbsp;·&nbsp; <kbd>Tab</kbd> auto-complete</div>
     </div>
   </div>
 
@@ -339,12 +339,6 @@
       <div class="empty-state" id="empty-state">
         <div class="empty-glyph">∅</div>
         <div class="empty-text">No lists yet.<br>Create one to see it rendered here.</div>
-        <div class="empty-example">
-          <span class="hl">NEW</span> 3<br>
-          42<br>
-          hello<br>
-          3.14
-        </div>
       </div>
     </div>
     <div class="legend">
@@ -359,16 +353,16 @@
 </div>
 
 <script>
-// ── CONFIG ──────────────────────────────────────────────────────────────────
+// CONFIG
 const WS_URL = (() => {
   const proto = location.protocol === 'https:' ? 'wss' : 'ws';
   return `${proto}://${location.host}/ws/${crypto.randomUUID()}`;
 })();
 
-const GITHUB_URL = 'https://github.com/YOUR_USERNAME/YOUR_REPO';
+const GITHUB_URL = 'https://github.com/biefeld/mtll';
 document.getElementById('gh-link').href = GITHUB_URL;
 
-// ── STATE ───────────────────────────────────────────────────────────────────
+// STATE
 let ws = null;
 let wsReady = false;
 let pendingLines = null;   // null = normal mode; [] = collecting multi-line
@@ -380,7 +374,7 @@ let expandedView = false;
 // parsed list state for canvas
 const lists = new Map(); // id -> { id, values:[], types:[], isNested }
 
-// ── WS ──────────────────────────────────────────────────────────────────────
+// WS
 function connect() {
   ws = new WebSocket(WS_URL);
   ws.onopen = () => {
@@ -411,7 +405,7 @@ function send(lines) {
   ws.send(JSON.stringify({ lines }));
 }
 
-// ── OUTPUT ──────────────────────────────────────────────────────────────────
+// OUTPUT
 const output = document.getElementById('output');
 
 function appendLine(type, text) {
@@ -456,7 +450,7 @@ function handleOutputLine(line) {
   parseOutputLine(line);
 }
 
-// ── INPUT ───────────────────────────────────────────────────────────────────
+// INPUT 
 const input = document.getElementById('cmd-input');
 const prompt = document.getElementById('input-prompt');
 
@@ -535,7 +529,7 @@ function updatePrompt() {
   prompt.textContent = pendingCount > 0 ? `${pendingCount}›` : '›';
 }
 
-// ── QUICK CMDS ──────────────────────────────────────────────────────────────
+//  QUICK CMDS 
 document.getElementById('quick-cmds').addEventListener('click', e => {
   const btn = e.target.closest('.qcmd');
   if (!btn) return;
@@ -549,29 +543,58 @@ document.getElementById('quick-cmds').addEventListener('click', e => {
   }
 });
 
-// ── DEMO ────────────────────────────────────────────────────────────────────
+// DEMO 
 async function runDemo() {
-  appendLine('info', '— running demo sequence —');
+  // clear any existing state first
+  output.innerHTML = '';
+  lists.clear();
+  renderCanvas();
+ 
   const steps = [
-    ['NEW 4', '1.00', 'baguette', '5', 'a'],
-    ['NEW 3', 'first', '{0}', 'last'],
-    ['VIEW 0'],
-    ['TYPE 0'],
-    ['INSERT 0 -1 99'],
-    ['VIEW-NESTED 1'],
+    // step: [lines_to_send, comment, pause_after_ms]
+    // --- heterogeneous types ---
+    { lines: ['NEW 5', '42', '3.14', 'z', 'hello world', '-7'], comment: 'create a list with every type: int, float, char, string, int' },
+    // --- another plain list ---
+    { lines: ['NEW 3', '100', '200', '300'], comment: 'create a second plain list' },
+    // --- nested reference ---
+    { lines: ['NEW 3', 'start', '{0}', 'end'], comment: 'nest list 0 inside a new list using {0}' },
+    // --- TYPE to show heterogeneous tags ---
+    { lines: ['TYPE 0'], comment: 'inspect the type of each node in list 0' },
+    // --- INSERT with positive index ---
+    { lines: ['INSERT 0 2 inserted'], comment: 'insert a string at index 2' },
+    // --- INSERT with negative index ---
+    { lines: ['INSERT 1 -1 999'], comment: 'negative index: insert 999 before the tail of list 1' },
+    // --- DELETE ---
+    { lines: ['DELETE 0 0'], comment: 'delete the head of list 0', pause: 800 },
+    // --- expanded view trigger ---
+    { lines: ['VIEW-NESTED 2'], comment: 'view nested list 2 with contents expanded', pause: 1000 },
+    // --- REMOVE blocked by reference ---
+    { lines: ['REMOVE 0'], comment: 'try to remove list 0 — blocked because list 2 references it' },
+    // --- REMOVE the nested list first, then the plain ---
+    { lines: ['REMOVE 2'], comment: 'remove the nested list first…' },
+    { lines: ['REMOVE 0'], comment: '…now list 0 can be removed', pause: 600 },
+    // --- VIEW ALL ---
+    { lines: ['VIEW ALL'], comment: 'see what remains' },
   ];
+ 
+  appendLine('info', '— demo: heterogeneous types · nesting · insert/delete · reference safety —');
+ 
   for (const step of steps) {
-    await delay(600);
-    appendLine('cmd', step[0]);
-    if (step.length > 1) step.slice(1).forEach(l => appendLine('info', '  ' + l));
-    send(step);
-    await delay(400);
+    await delay(step.pause || 700);
+    appendLine('cmd', step.lines[0]);
+    if (step.lines.length > 1) step.lines.slice(1).forEach(l => appendLine('info', '  ' + l));
+    if (step.comment) appendLine('out', '  # ' + step.comment);
+    send(step.lines);
+    await delay(500);
   }
+ 
+  appendLine('info', '— demo complete —');
 }
+
 
 function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-// ── CANVAS PARSING ──────────────────────────────────────────────────────────
+// CANVAS PARSING 
 // Parse output lines to build canvas state
 // Supports: "List N: a -> b -> c" and "Nested N: ..."
 // track which list id we last sent VIEW-NESTED for
@@ -615,7 +638,7 @@ function guessType(v) {
   return 'string';
 }
 
-// ── CANVAS RENDER ────────────────────────────────────────────────────────────
+// CANVAS RENDER
 let refreshTimer = null;
 function scheduleCanvasRefresh() {
   clearTimeout(refreshTimer);
@@ -680,7 +703,7 @@ function nodeRowHtml(vals, types) {
 function buildCard(data) {
   const { id, values, types, isNested } = data;
   const badgeCls = isNested ? 'badge-nested' : 'badge-plain';
-  const badgeTxt = isNested ? 'nested' : 'list';
+  const badgeTxt = isNested ? 'nested list' : 'list';
 
   // normal view: always just the flat node row
   if (!expandedView) {
@@ -740,7 +763,7 @@ function buildCard(data) {
     </div>`;
 }
 
-// ── VIEW TOGGLE ──────────────────────────────────────────────────────────────
+// VIEW TOGGLE
 document.getElementById('btn-normal').addEventListener('click', () => {
   expandedView = false;
   document.getElementById('btn-normal').classList.add('active');
@@ -777,7 +800,7 @@ const outputObserver = new MutationObserver(() => {
 });
 outputObserver.observe(output, { childList: true });
 
-// ── BOOT ─────────────────────────────────────────────────────────────────────
+// BOOT
 async function checkHealth() {
   try {
     const r = await fetch('/health');
